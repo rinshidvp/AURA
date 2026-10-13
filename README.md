@@ -1,6 +1,6 @@
 # AURA — Autonomous University Response and Action
 
-[![CI/CD Pipeline](https://github.com/muhammedrinshidvpr-coder/AURA/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/muhammedrinshidvpr-coder/AURA/actions/workflows/ci-cd.yml)
+[![CI/CD Pipeline](https://github.com/rinshidvp/AURA/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/rinshidvp/AURA/actions/workflows/ci-cd.yml)
 [![Live Web Portal](https://img.shields.io/badge/Vercel-aura--campus--three.vercel.app-6366f1?logo=vercel&logoColor=white)](https://aura-campus-three.vercel.app)
 [![Java 17](https://img.shields.io/badge/Java-17%20SE-ED8B00?logo=openjdk&logoColor=white)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com)
@@ -69,7 +69,7 @@ All deliverables and modules map directly to the approved presentation assignmen
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/muhammedrinshidvpr-coder/AURA.git
+git clone https://github.com/rinshidvp/AURA.git
 cd AURA
 
 # 2. Apply Database Schema and Seed Data in Supabase SQL Editor
