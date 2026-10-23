@@ -40,6 +40,7 @@ Every component of AURA is rigorously documented and directly aligned with the f
 | [`docs/SECURITY.md`](docs/SECURITY.md) | Domain gating (`@tkmce.ac.in`), BCrypt hashing, and Anonymity Vault mathematical proof | Slides 9, 10, 16 |
 | [`docs/TESTING.md`](docs/TESTING.md) | Automated JUnit 5 test suites and administrative anonymity regression verification | Slides 15, 28 |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | 10-Week schedule (Slide 28) with Planned vs. Completed verification matrix | Slide 18, 28 |
+| [`docs/presentation/final/index.html`](docs/presentation/final/index.html) | **Final evaluation deck** (21 slides mapped to PO3–PO11), live at [aura-campus-three.vercel.app/final-presentation](https://aura-campus-three.vercel.app/final-presentation), PDF backup and [speaker run-sheet](docs/presentation/final/SPEAKER_RUNSHEET.md) | Final Evaluation |
 | [`docs/VIVA_DEFENSE_GUIDE.md`](docs/VIVA_DEFENSE_GUIDE.md) | **Phase 2 Viva Voce Defense Guide** (Slide-by-slide Q&A for all 5 team members & Golden Path script) | Slides 1–30 |
 
 ---
@@ -72,8 +73,10 @@ All deliverables and modules map directly to the approved presentation assignmen
 git clone https://github.com/rinshidvp/AURA.git
 cd AURA
 
-# 2. Apply Database Schema and Seed Data in Supabase SQL Editor
-# Execute sql/schema.sql followed by sql/seed.sql
+# 2. Apply the database setup in Supabase SQL Editor
+# New demo database: sql/schema.sql, then sql/seed.sql, then sql/web_portal.sql
+# Existing/production database: do NOT rerun seed.sql (it truncates all AURA data);
+# apply sql/web_portal.sql after confirming the existing schema is current.
 
 # 3. Configure Database Credentials
 cp src/main/resources/db.properties.example src/main/resources/db.properties
@@ -96,3 +99,9 @@ mvn exec:java
 | **Student 2** | `student2@tkmce.ac.in` | `password123` | STUDENT |
 | **Administrator** | `admin@tkmce.ac.in` | `admin123` | ADMIN |
 | **Estate Officer** | `estate@tkmce.ac.in` | `admin123` | ADMIN |
+
+The credentials above are for the Java desktop demonstration. The live web portal uses Supabase email/password sign-in; its role is resolved from the matching `public.users` record.
+
+## 6. Live Web Portal Authentication
+
+Set up Supabase email/password Auth, apply the web security migration, and configure the Vercel runtime variables by following [`docs/WEB_PORTAL_AUTH.md`](docs/WEB_PORTAL_AUTH.md). The portal now requires a confirmed `@tkmce.ac.in` account and uses database-backed data and role-protected operations. Do not expose a Supabase service-role key or database credentials to the browser.

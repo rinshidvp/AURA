@@ -5,6 +5,8 @@
 > Academic Course: APJ Abdul Kalam Technological University (KTU) CST205 / CSL203 — Object Oriented Programming in Java  
 > Presentation Reference: [`docs/AURA.pdf`](AURA.pdf) (Slide 1–30)
 
+> **Final evaluation (Oct 2026):** this guide records the Phase 2 sign-off. For the final deck, running order and updated viva answers, use [`docs/presentation/final/SPEAKER_RUNSHEET.md`](presentation/final/SPEAKER_RUNSHEET.md). Google OAuth was retired after Phase 2; both apps now use email/password sign-in.
+
 ---
 
 ## 1. Executive Version 1 Completion Statement
@@ -26,7 +28,7 @@ Every team member has dedicated module ownership derived from Slide 17 of [`docs
 ```
 ========================================================================================
 TEAM MEMBER 1: MUHAMMED RINSHID VP (B25CSB45) — TEAM LEAD & SYSTEM COORDINATOR
-Slides Owned: 1–4, 20 | Module: Core Architecture, DatabaseConfig, Google OAuth Bridge
+Slides Owned: 1–4, 20 | Module: Core Architecture, DatabaseConfig, Web Portal & CI/CD
 ========================================================================================
 ```
 
@@ -135,7 +137,7 @@ Follow this uninterrupted 5-step demonstration during the presentation:
 
 | Step | Persona | Action | Expected Visual Result |
 |---|---|---|---|
-| **1. Student Login** | `student1@tkmce.ac.in` | Click **Sign In** (or Google OAuth) | Student Portal opens with personalized welcome and category statistics. |
+| **1. Student Login** | `student1@tkmce.ac.in` | Enter email and password, click **Sign In** | Student Portal opens with personalized welcome and category statistics. |
 | **2. Anonymous Submit** | Student 1 | Click **+ New Submission**, enter title *"Projector flickers in CSE Lab 3"*, select Category `ACADEMIC_LABS`, Priority `HIGH`, click **Submit Anonymously** | Dialog confirms receipt stored in private vault. Ticket appears in feed with **0 author metadata**. |
 | **3. Crowd Hype** | Student 2 (`student2@tkmce.ac.in`) | View **Trending** feed, locate the projector issue, click **Hype (Flame icon)** | Hype count increments from `0 → 1`. Ticket rises in priority ranking. |
 | **4. Admin Triage** | `admin@tkmce.ac.in` | In Admin Governance window, click **Refresh**, select projector ticket, change status to `IN_PROGRESS`, add note *"Technician dispatched"* | Status badge transitions to Blue (`IN_PROGRESS`). Note is committed to database. |

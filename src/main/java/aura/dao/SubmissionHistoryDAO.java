@@ -14,10 +14,18 @@ import java.util.List;
 public class SubmissionHistoryDAO {
 
     public SubmissionHistory create(SubmissionHistory history) {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            return create(conn, history);
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error recording submission history: " + e.getMessage(), e);
+        }
+    }
+
+    /** Inserts on the caller's connection so it can join a wider transaction. */
+    public SubmissionHistory create(Connection conn, SubmissionHistory history) {
         String sql = "INSERT INTO submission_history (submission_id, changed_by, old_status, new_status) " +
                      "VALUES (?, ?, ?, ?) RETURNING history_id, changed_at";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, history.getSubmissionId());
             ps.setInt(2, history.getChangedBy() > 0 ? history.getChangedBy() : 1);
             ps.setString(3, history.getOldStatus() != null ? history.getOldStatus().name() : "NONE");

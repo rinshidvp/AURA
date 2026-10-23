@@ -17,6 +17,7 @@ public final class DatabaseConfig {
     private static final String USER;
     private static final String PASSWORD;
     private static final String DRIVER;
+    private static volatile Boolean reachable;
 
     static {
         // Cache DNS lookups for pooler host to prevent intermittent DNS resolution drops
@@ -65,6 +66,30 @@ public final class DatabaseConfig {
      */
     public static boolean isConfigured() {
         return URL != null && !URL.isBlank() && !URL.contains("[YOUR_PROJECT_REF]") && !USER.isBlank();
+    }
+
+    /**
+     * Checks whether the configured database can be reached without exposing
+     * connection failures as false-positive integration test failures.
+     */
+    public static boolean isReachable() {
+        if (!isConfigured()) {
+            return false;
+        }
+        if (reachable != null) {
+            return reachable;
+        }
+        synchronized (DatabaseConfig.class) {
+            if (reachable != null) {
+                return reachable;
+            }
+            try (Connection ignored = getConnection()) {
+                reachable = true;
+            } catch (SQLException e) {
+                reachable = false;
+            }
+        }
+        return reachable;
     }
 
     /**

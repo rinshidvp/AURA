@@ -1,4 +1,6 @@
-# AURA — Developer Task Guide: Google OAuth 2.0 Desktop Authentication & User Provisioning
+# AURA — Historical Developer Task Guide: Google OAuth 2.0 Desktop Authentication
+
+> Historical reference only. AURA now uses institutional email/password sign-in. Google OAuth is no longer an active desktop or web login path; follow `WEB_PORTAL_AUTH.md` for current authentication setup.
 
 **Project:** Autonomous University Response and Action (AURA)  
 **Department:** Computer Science & Engineering, TKM College of Engineering (TKMCE)  

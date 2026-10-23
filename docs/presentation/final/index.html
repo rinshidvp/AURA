@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="editorial-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA Final Evaluation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root, :root[data-theme="editorial-light"] {
+      --bg-canvas: #EEF1F6;
+      --bg-stage: #FFFFFF;
+      --bg-surface: #F6F8FB;
+      --bg-surface-elevated: #ECEBFD;
+      --border-subtle: #DFE4EC;
+      --border-highlight: rgba(79, 70, 229, 0.35);
+      --text-primary: #0F172A;
+      --text-secondary: #3F4B5E;
+      --text-muted: #64748B;
+      --accent-primary: #4F46E5;
+      --accent-primary-glow: rgba(79, 70, 229, 0.14);
+      --accent-secondary: #0E7490;
+      --accent-success: #047857;
+      --accent-warning: #B45309;
+      --accent-danger: #BE123C;
+      --tint-success: #E3F6EE;
+      --tint-warning: #FDF1DF;
+      --tint-danger: #FCE7EC;
+    }
+    :root[data-theme="cyber-dark"] {
+      --bg-canvas: #07090E;
+      --bg-stage: #0D121F;
+      --bg-surface: #131B2E;
+      --bg-surface-elevated: #1B253D;
+      --border-subtle: rgba(255, 255, 255, 0.09);
+      --border-highlight: rgba(129, 140, 248, 0.45);
+      --text-primary: #F8FAFC;
+      --text-secondary: #B6C2D3;
+      --text-muted: #8391A7;
+      --accent-primary: #818CF8;
+      --accent-primary-glow: rgba(129, 140, 248, 0.2);
+      --accent-secondary: #22D3EE;
+      --accent-success: #34D399;
+      --accent-warning: #FBBF24;
+      --accent-danger: #FB7185;
+      --tint-success: rgba(52, 211, 153, 0.12);
+      --tint-warning: rgba(251, 191, 36, 0.12);
+      --tint-danger: rgba(251, 113, 133, 0.12);
+    }
+    :root[data-theme="executive"] {
+      --bg-canvas: #0B1222;
+      --bg-stage: #15203A;
+      --bg-surface: #1E2B49;
+      --bg-surface-elevated: #273759;
+      --border-subtle: rgba(255, 255, 255, 0.1);
+      --border-highlight: rgba(56, 189, 248, 0.45);
+      --text-primary: #FFFFFF;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+      --accent-primary: #38BDF8;
+      --accent-primary-glow: rgba(56, 189, 248, 0.2);
+      --accent-secondary: #A5B4FC;
+      --accent-success: #34D399;
+      --accent-warning: #FBBF24;
+      --accent-danger: #FB7185;
+      --tint-success: rgba(52, 211, 153, 0.12);
+      --tint-warning: rgba(251, 191, 36, 0.12);
+      --tint-danger: rgba(251, 113, 133, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      user-select: none;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    .viewport-container {
+      width: 100vw; height: 100vh; height: 100dvh;
+      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+      padding: 0.8rem 1.5rem;
+    }
+    header.deck-header, footer.deck-footer {
+      width: min(96vw, calc(84vh * 16 / 9));
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.35rem 0; font-size: 0.8rem; color: var(--text-secondary);
+    }
+    header.deck-header { border-bottom: 1px solid var(--border-subtle); }
+    .header-badge {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.2rem 0.55rem; border-radius: 6px;
+      background: var(--bg-surface-elevated); color: var(--accent-primary); border: 1px solid var(--border-highlight);
+    }
+    main.stage-wrapper { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; padding: 0.5rem 0; min-height: 0; }
+    #slideStage {
+      width: min(96vw, calc(84vh * 16 / 9));
+      aspect-ratio: 16 / 9;
+      max-height: 84vh;
+      background: var(--bg-stage);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      box-shadow: 0 24px 60px -24px rgba(15, 23, 42, 0.35);
+      position: relative; overflow: hidden;
+      container-type: size;
+    }
+
+    /* Everything inside a slide is sized in em, and 1em tracks the stage width. */
+    .slide {
+      position: absolute; inset: 0;
+      font-size: 1.45cqw;
+      padding: 2.6em 3.4em 2em;
+      display: none; flex-direction: column;
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.active { display: flex; opacity: 1; transform: none; }
+    .slide-eyebrow {
+      font-size: 0.72em; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--accent-primary); margin-bottom: 0.45em;
+      display: flex; gap: 0.8em; align-items: center;
+    }
+    .po-tag {
+      font-family: 'JetBrains Mono', monospace; letter-spacing: 0.02em;
+      padding: 0.15em 0.55em; border-radius: 0.4em;
+      background: var(--bg-surface-elevated); border: 1px solid var(--border-highlight);
+    }
+    .slide-title {
+      font-family: 'Outfit', sans-serif; font-size: 2.35em; font-weight: 800;
+      line-height: 1.1; letter-spacing: -0.02em;
+    }
+    .slide-subtitle { font-size: 1.05em; color: var(--text-secondary); margin-top: 0.4em; max-width: 52em; line-height: 1.45; }
+    .slide-body { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; margin: 1.2em 0 0.9em; font-size: 1.12em; }
+    .slide-body.member-body { font-size: 1.22em; }
+    .slide-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--border-subtle); padding-top: 0.75em;
+      font-size: 0.68em; color: var(--text-muted);
+    }
+    .slide-footer b { color: var(--text-secondary); font-weight: 600; }
+
+    /* Building blocks */
+    .grid { display: grid; gap: 1em; }
+    .g2 { grid-template-columns: repeat(2, 1fr); }
+    .g3 { grid-template-columns: repeat(3, 1fr); }
+    .g4 { grid-template-columns: repeat(4, 1fr); }
+    .g5 { grid-template-columns: repeat(5, 1fr); }
+    .card {
+      background: var(--bg-surface); border: 1px solid var(--border-subtle);
+      border-radius: 0.8em; padding: 1em 1.15em;
+    }
+    .card h3 { font-family: 'Outfit', sans-serif; font-size: 1.12em; font-weight: 700; margin-bottom: 0.35em; line-height: 1.2; }
+    .card p, .card li { font-size: 0.86em; color: var(--text-secondary); line-height: 1.45; }
+    .card ul { list-style: none; display: grid; gap: 0.3em; }
+    .card li::before { content: "—  "; color: var(--accent-primary); font-weight: 700; }
+    .kicker { font-size: 0.66em; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-primary); margin-bottom: 0.4em; }
+    .card.accent { border-color: var(--border-highlight); background: var(--bg-surface-elevated); }
+    .card.good { border-left: 0.3em solid var(--accent-success); }
+    .card.warn { border-left: 0.3em solid var(--accent-warning); }
+    .card.bad { border-left: 0.3em solid var(--accent-danger); }
+    code, .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.88em; }
+    .pill {
+      display: inline-block; font-size: 0.68em; font-weight: 700; padding: 0.2em 0.6em; border-radius: 999px;
+      background: var(--tint-success); color: var(--accent-success); margin: 0.15em 0.2em 0 0;
+    }
+    .pill.warn { background: var(--tint-warning); color: var(--accent-warning); }
+    .pill.neutral { background: var(--bg-surface-elevated); color: var(--accent-primary); }
+
+    .stat { text-align: left; }
+    .stat .num { font-family: 'Outfit', sans-serif; font-size: 3.1em; font-weight: 800; line-height: 1; color: var(--accent-primary); }
+    .stat .lbl { font-size: 0.86em; font-weight: 600; margin-top: 0.3em; }
+    .stat .sub { font-size: 0.72em; color: var(--text-muted); margin-top: 0.15em; line-height: 1.35; }
+
+    table.tbl { width: 100%; border-collapse: collapse; font-size: 0.8em; }
+    table.tbl th { text-align: left; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700; padding: 0.45em 0.7em; border-bottom: 2px solid var(--border-subtle); }
+    table.tbl td { padding: 0.5em 0.7em; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); vertical-align: top; line-height: 1.35; }
+    table.tbl td:first-child { color: var(--text-primary); font-weight: 600; white-space: nowrap; }
+    table.tbl tr.total td { font-weight: 700; color: var(--text-primary); border-bottom: none; border-top: 2px solid var(--border-subtle); }
+    table.tbl.cost { font-size: 0.74em; }
+    table.tbl.cost td:first-child { white-space: normal; }
+    table.tbl.cost td:nth-child(2) { white-space: nowrap; }
+    table.tbl.cost td:last-child { white-space: nowrap; text-align: right; }
+
+    .flow { display: flex; align-items: stretch; gap: 0.5em; }
+    .flow .step { flex: 1; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 0.7em; padding: 0.8em 0.9em; position: relative; display: flex; flex-direction: column; }
+    .flow .step .step-foot { margin-top: auto; padding-top: 0.6em; }
+    .flow .step .n { font-family: 'JetBrains Mono', monospace; font-size: 0.66em; font-weight: 700; color: var(--accent-primary); }
+    .flow .step h4 { font-size: 0.92em; margin: 0.25em 0; line-height: 1.2; }
+    .flow .step p { font-size: 0.74em; color: var(--text-secondary); line-height: 1.4; }
+    .flow .arrow { align-self: center; color: var(--text-muted); font-size: 1.1em; }
+
+    .hero-title { font-family: 'Outfit', sans-serif; font-size: 5.4em; font-weight: 800; letter-spacing: -0.03em; line-height: 0.95; }
+    .hero-title span { color: var(--accent-primary); }
+    .tagline { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; letter-spacing: 0.2em; color: var(--text-muted); margin-top: 0.9em; }
+    .big-quote { font-family: 'Outfit', sans-serif; font-size: 2.2em; font-weight: 700; line-height: 1.2; max-width: 26em; }
+    .big-quote em { font-style: normal; color: var(--accent-primary); }
+    .muted { color: var(--text-muted); }
+    .small { font-size: 0.78em; }
+
+    /* Architecture diagram */
+    .arch { display: grid; grid-template-columns: 1fr 0.25fr 1.25fr; gap: 0.6em; align-items: center; }
+    .arch .col { display: grid; gap: 0.7em; }
+    .arch .conn { display: grid; gap: 0.7em; text-align: center; font-size: 0.7em; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+    .arch .conn div { border-top: 2px dashed var(--border-highlight); padding-top: 0.3em; }
+    .db { border: 2px solid var(--accent-primary); border-radius: 0.8em; padding: 0.9em 1.1em; background: var(--bg-surface-elevated); }
+    .db h3 { font-family: 'Outfit', sans-serif; font-size: 1.15em; margin-bottom: 0.4em; }
+    .db .tables { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.35em; }
+    .db .tables span { font-family: 'JetBrains Mono', monospace; font-size: 0.64em; background: var(--bg-stage); border: 1px solid var(--border-subtle); border-radius: 0.35em; padding: 0.3em 0.4em; text-align: center; }
+    .db .tables span.vault { border-color: var(--accent-danger); color: var(--accent-danger); font-weight: 700; }
+
+    /* Vault diagram */
+    .vault-row { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 0.7em; }
+    .wall { width: 0.35em; align-self: stretch; background: repeating-linear-gradient(180deg, var(--accent-danger) 0 0.6em, transparent 0.6em 1.0em); border-radius: 0.2em; }
+
+    /* Member slide */
+    .member-head { display: flex; align-items: center; gap: 1em; }
+    .avatar { width: 3.3em; height: 3.3em; border-radius: 50%; display: grid; place-items: center; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.15em; background: var(--accent-primary); color: #fff; flex-shrink: 0; }
+
+    /* Timeline */
+    .timeline { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.6em; padding-top: 1.4em; }
+    .timeline::before { content: ""; position: absolute; top: 0.55em; left: 0; right: 0; height: 2px; background: var(--border-subtle); }
+    .tl { position: relative; }
+    .tl::before { content: ""; position: absolute; top: -1.15em; left: 0; width: 0.75em; height: 0.75em; border-radius: 50%; background: var(--accent-success); box-shadow: 0 0 0 0.25em var(--bg-stage); }
+    .tl.now::before { background: var(--accent-primary); }
+    .tl .date { font-family: 'JetBrains Mono', monospace; font-size: 0.66em; color: var(--text-muted); font-weight: 600; }
+    .tl h4 { font-size: 0.86em; margin: 0.2em 0; line-height: 1.2; }
+    .tl p { font-size: 0.7em; color: var(--text-secondary); line-height: 1.35; }
+
+    /* HUD */
+    .hud-group { display: flex; align-items: center; gap: 0.5rem; }
+    .btn {
+      background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-subtle);
+      padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.35rem; font-family: inherit;
+    }
+    .btn:hover { background: var(--bg-surface-elevated); border-color: var(--border-highlight); }
+    .btn-primary { background: var(--accent-primary); color: #fff; border-color: transparent; }
+    .btn-icon { width: 30px; height: 30px; padding: 0; justify-content: center; }
+    .progress-bar-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--border-subtle); z-index: 5; }
+    .progress-bar-fill { height: 100%; background: var(--accent-primary); transition: width 0.3s ease; }
+    .progress-dots { display: flex; gap: 0.3rem; flex-wrap: wrap; justify-content: center; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-subtle); cursor: pointer; }
+    .dot.active { background: var(--accent-primary); transform: scale(1.35); }
+    .timer-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; padding: 0.28rem 0.55rem; border-radius: 6px; background: var(--bg-surface); border: 1px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; }
+    .timer-badge.over { color: var(--accent-danger); border-color: var(--accent-danger); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 2rem; }
+    .modal-overlay.active { display: flex; }
+    .overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; max-width: 1200px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 1.25rem; background: var(--bg-stage); border: 1px solid var(--border-subtle); border-radius: 14px; }
+    .overview-card { aspect-ratio: 16/9; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.8rem; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; }
+    .overview-card:hover, .overview-card.active { border-color: var(--accent-primary); }
+    .overview-card .card-num { font-size: 0.68rem; font-weight: 700; color: var(--accent-primary); }
+    .overview-card .card-title { font-family: 'Outfit', sans-serif; font-size: 0.85rem; font-weight: 700; line-height: 1.2; color: var(--text-primary); }
+    .overview-card .card-who { font-size: 0.68rem; color: var(--text-muted); }
+    .notes-drawer { position: fixed; bottom: 0; right: 1.5rem; width: 440px; max-height: 50vh; background: var(--bg-stage); border: 1px solid var(--border-highlight); border-bottom: none; border-radius: 14px 14px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.3); z-index: 90; display: none; flex-direction: column; }
+    .notes-drawer.active { display: flex; }
+    .notes-header { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border-subtle); font-size: 0.75rem; font-weight: 700; color: var(--accent-primary); }
+    .notes-body { padding: 1rem; overflow-y: auto; font-size: 0.86rem; line-height: 1.6; color: var(--text-secondary); }
+
+    .fragment { opacity: 0.12; transform: translateY(5px); transition: opacity 0.3s ease, transform 0.3s ease; }
+    .fragment.visible { opacity: 1; transform: none; }
+
+    /* Phones: drop the HUD extras, and ask for landscape when held upright. */
+    .rotate-hint { display: none; }
+    @media (max-width: 760px), (max-height: 500px) {
+      .viewport-container { padding: 0.4rem 0.6rem; }
+      header.deck-header .hud-group:first-child > span:not(.header-badge), #speakerNow,
+      .deck-footer .hud-group.small, .progress-dots { display: none; }
+      .btn { padding: 0.35rem 0.7rem; }
+      .header-badge, #slideCounter { white-space: nowrap; }
+      .btn-icon { width: 28px; height: 28px; }
+    }
+    @media (max-height: 500px) {
+      header.deck-header { display: none; }
+      header.deck-header, footer.deck-footer, #slideStage { width: min(98vw, calc(84vh * 16 / 9)); }
+      #slideStage { border-radius: 10px; }
+    }
+    @media (orientation: portrait) and (max-width: 760px) {
+      .rotate-hint {
+        display: block; text-align: center; font-size: 0.8rem; color: var(--text-muted);
+        padding: 0.4rem 0.8rem; border: 1px dashed var(--border-subtle); border-radius: 8px;
+      }
+      #slideStage { border-radius: 10px; }
+    }
+
+    @page { size: 16in 9in; margin: 0; }
+    @media print {
+      body { height: auto; overflow: visible; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      header.deck-header, footer.deck-footer, .modal-overlay, .notes-drawer, .progress-bar-container, .rotate-hint { display: none !important; }
+      .viewport-container { height: auto; padding: 0; display: block; }
+      main.stage-wrapper { padding: 0; display: block; }
+      #slideStage { width: 16in; max-height: none; aspect-ratio: auto; height: auto; border: none; border-radius: 0; box-shadow: none; overflow: visible; container-type: normal; }
+      .slide { position: relative; display: flex !important; opacity: 1 !important; transform: none !important; width: 16in; height: 9in; font-size: 22px; break-after: page; }
+      .fragment { opacity: 1 !important; transform: none !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="viewport-container">
+  <header class="deck-header">
+    <div class="hud-group">
+      <span class="header-badge">Final Evaluation</span>
+      <span>AURA — Autonomous University Response and Action</span>
+    </div>
+    <div class="hud-group">
+      <span id="speakerNow" class="small" style="color: var(--text-muted);"></span>
+      <span id="slideCounter" class="mono">1 / 1</span>
+      <button class="btn btn-icon" onclick="toggleOverview()" title="Slide grid (G)" aria-label="Slide grid">⊞</button>
+      <button class="btn btn-icon" onclick="toggleNotes()" title="Speaker notes (S)" aria-label="Speaker notes">✎</button>
+      <button class="btn btn-icon" onclick="cycleTheme()" title="Theme (T)" aria-label="Change theme">◐</button>
+      <button class="btn btn-icon" onclick="toggleFullscreen()" title="Fullscreen (F)" aria-label="Fullscreen">⛶</button>
+    </div>
+  </header>
+
+  <p class="rotate-hint">Turn your phone sideways for a bigger view · swipe to change slides</p>
+
+  <main class="stage-wrapper">
+    <div id="slideStage">
+      <div class="progress-bar-container"><div id="progressFill" class="progress-bar-fill"></div></div>
+
+      <!-- 1. Title -->
+      <section class="slide active" data-speaker="Muhammed Rinshid VP" data-notes="Good morning respected evaluators. We are Team AURA from CSE, TKMCE. Phase 1 approved the design, Phase 2 showed the working core. Today is the finished, integrated system: the Java desktop app and a live web and mobile portal, both running on one cloud database. We will show it working, then walk through tools, impact on society, ethics, planning and cost, and what we learned. (30s)">
+        <div class="slide-body" style="justify-content: center;">
+          <div class="slide-eyebrow">Department of CSE · TKM College of Engineering · Final Evaluation</div>
+          <div class="hero-title">AURA<span>.</span></div>
+          <p class="slide-subtitle" style="font-size: 1.35em; max-width: 34em;">Anonymous campus issue reporting that students trust and administrators can act on.</p>
+          <div class="tagline">REPORT · TRACK · RESOLVE · IMPROVE</div>
+          <div class="grid g5" style="margin-top: 2.4em;">
+            <div class="card"><div class="kicker">Team Lead</div><h3>Muhammed Rinshid&nbsp;VP</h3><p class="mono">B25CSB45</p></div>
+            <div class="card"><div class="kicker">Hype Engine</div><h3>Nirmal Binoy</h3><p class="mono">B25CSB52</p></div>
+            <div class="card"><div class="kicker">Security & Vault</div><h3>Mohammed Nafih</h3><p class="mono">B25CSB37</p></div>
+            <div class="card"><div class="kicker">Database & GUI</div><h3>Rahandeep RD</h3><p class="mono">B25CSB53</p></div>
+            <div class="card"><div class="kicker">Lifecycle & QA</div><h3>Athil Rahuman&nbsp;A</h3><p class="mono">B25CSB84</p></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>KTU CST205 / CSL203 · Object Oriented Programming in Java</span><span>Live: <b>aura-campus-three.vercel.app</b> · Code: <b>github.com/rinshidvp/AURA</b></span></div>
+      </section>
+
+      <!-- 2. Problem -->
+      <section class="slide" data-speaker="Muhammed Rinshid VP" data-notes="Recap in one breath. Today issues go to WhatsApp groups, a paper box, or a Google Form. Nobody can see whether anything happened, the loudest issue wins rather than the most widespread one, and students do not report things about faculty-run labs or the hostel because their name is attached. AURA fixes exactly those three failures. Do not linger, the evaluators know this from Phase 1. (45s)">
+        <div>
+          <div class="slide-eyebrow">Recap · Why AURA exists</div>
+          <h2 class="slide-title">Campus problems get reported. Then they disappear.</h2>
+        </div>
+        <div class="slide-body">
+          <div class="grid g3">
+            <div class="card bad"><div class="kicker">Today</div><h3>No tracking</h3><p>WhatsApp groups, a paper box and flat Google Forms. Students never learn if anything happened.</p></div>
+            <div class="card bad"><div class="kicker">Today</div><h3>No priority</h3><p>The loudest complaint wins, not the one affecting the most students.</p></div>
+            <div class="card bad"><div class="kicker">Today</div><h3>Fear of reprisal</h3><p>A named complaint about a lab, hostel or office can follow a student. So it goes unreported.</p></div>
+            <div class="card good fragment"><div class="kicker">AURA</div><h3>5-state lifecycle</h3><p>PENDING → ASSIGNED → IN_PROGRESS → RESOLVED / REJECTED, with a public resolution note and an audit trail.</p></div>
+            <div class="card good fragment"><div class="kicker">AURA</div><h3>Hype engine</h3><p>One upvote per verified student pushes the most widespread problems to the top of Trending.</p></div>
+            <div class="card good fragment"><div class="kicker">AURA</div><h3>Anonymity vault</h3><p>Reports carry no author. Only the student who filed it can see their own receipt.</p></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>UN SDG 16 · 11 · 9 · 4</span><span>Approved in Phase 1 · <b>docs/PRD.md</b></span></div>
+      </section>
+
+      <!-- 3. Architecture -->
+      <section class="slide" data-speaker="Muhammed Rinshid VP" data-notes="This is the key integration story for PO3. Two front doors, one database. The Java desktop app talks JDBC through our DAO layer. The web and phone portal talks to the same Supabase Postgres through six database functions that check the caller's role inside the database. So a report filed on a phone appears in the admin's desktop triage table, and a status change on the desktop shows up on the student's phone. Point at the red table: the receipts table is the vault, no admin path reads it. (60s)">
+        <div>
+          <div class="slide-eyebrow">System integration <span class="po-tag">PO3</span></div>
+          <h2 class="slide-title">Two front doors. One source of truth.</h2>
+          <p class="slide-subtitle">A report filed on a phone shows up in the admin's desktop triage table. A status change on the desktop shows up on the student's phone.</p>
+        </div>
+        <div class="slide-body">
+          <div class="arch">
+            <div class="col">
+              <div class="card accent"><div class="kicker">Desktop · Java 17</div><h3>FlatLaf Swing app</h3><p>UI → Service → DAO → JDBC. Prepared statements only. BCrypt sign-in.</p></div>
+              <div class="card accent"><div class="kicker">Web + phone · PWA</div><h3>Vercel portal</h3><p>Supabase Auth sign-in. Works offline-installable on any phone browser.</p></div>
+            </div>
+            <div class="conn"><div>JDBC<br>via pooler</div><div>6 RPCs<br>role-checked</div></div>
+            <div class="db">
+              <div class="kicker">Supabase · PostgreSQL</div>
+              <h3>6 tables, constraints enforced in the database</h3>
+              <div class="tables">
+                <span>users</span><span>submissions</span><span class="vault">student_submission_receipts</span>
+                <span>submission_hype</span><span>resolution_notes</span><span>submission_history</span>
+              </div>
+              <p class="small muted" style="margin-top: 0.6em;">Browser roles cannot touch tables directly; they can only call the 6 portal functions, each of which re-checks identity, domain and role.</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>39 Java classes · 3,676 lines · 548 lines SQL</span><span><b>docs/ARCHITECTURE.md</b> · <b>sql/web_portal.sql</b></span></div>
+      </section>
+
+      <!-- 4. Module map -->
+      <section class="slide" data-speaker="Muhammed Rinshid VP" data-notes="Five modules, five owners, and every one is working and has a test behind it. Read the row headers, not every cell. The point for PO3: none of these works in isolation; each depends on the one to its left. Then hand straight into the demo. (40s)">
+        <div>
+          <div class="slide-eyebrow">Modules · all integrated, all tested <span class="po-tag">PO3</span></div>
+          <h2 class="slide-title">Five modules, one pipeline</h2>
+        </div>
+        <div class="slide-body">
+          <div class="flow">
+            <div class="step"><span class="n">01 · NAFIH</span><h4>Auth & Vault</h4><p><code>AuthService</code>, <code>ValidationUtil</code>, <code>PasswordUtil</code>, <code>StudentReceiptDAO</code></p><p class="step-foot"><span class="pill">tested</span></p></div>
+            <div class="arrow">→</div>
+            <div class="step"><span class="n">02 · RAHANDEEP</span><h4>Schema, DAO & GUI</h4><p><code>schema.sql</code>, <code>SubmissionDAO</code>, student UI panels</p><p class="step-foot"><span class="pill">tested</span></p></div>
+            <div class="arrow">→</div>
+            <div class="step"><span class="n">03 · NIRMAL</span><h4>Hype & Trending</h4><p><code>HypeService</code>, <code>SubmissionHypeDAO</code>, one-vote constraint</p><p class="step-foot"><span class="pill">tested</span></p></div>
+            <div class="arrow">→</div>
+            <div class="step"><span class="n">04 · ATHIL</span><h4>Lifecycle & Reports</h4><p><code>TrackingService</code>, <code>ReportService</code>, history, CSV</p><p class="step-foot"><span class="pill">tested</span></p></div>
+            <div class="arrow">→</div>
+            <div class="step"><span class="n">05 · RINSHID</span><h4>Cloud, Web & CI</h4><p><code>DatabaseConfig</code>, web portal, RPC security, CI/CD</p><p class="step-foot"><span class="pill">tested</span></p></div>
+          </div>
+          <div class="grid g3" style="margin-top: 1.3em;">
+            <div class="card"><p><b>Student</b> signs in → files a report → gets a private receipt → upvotes others.</p></div>
+            <div class="card"><p><b>Admin</b> sees an author-free queue → assigns → resolves with a note → exports CSV.</p></div>
+            <div class="card"><p><b>Every state change</b> lands in <code>submission_history</code> with old state, new state and who changed it.</p></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Module ownership agreed in Phase 1</span><span><b>README.md §3</b></span></div>
+      </section>
+
+      <!-- 5. Vault -->
+      <section class="slide" data-speaker="Mohammed Nafih" data-notes="This is our most important design decision. The submissions table has no student column at all, not hidden, not encrypted, it simply does not exist. The link between a student and their report lives only in the receipts table, and the only code that reads it is the student's own My Receipts view. We prove this three ways: a reflection test that fails the build if anyone adds a student field to Submission, a database test where an admin calling the receipt function gets a permission error, and a test that the CSV export contains no identity columns. Ask the evaluator: what would it take to find out who filed a report? Answer: direct database superuser access, which neither app has from the browser. (60s)">
+        <div>
+          <div class="slide-eyebrow">The decoupled anonymity vault <span class="po-tag">PO3</span> <span class="po-tag">PO7</span></div>
+          <h2 class="slide-title">Even the administrator cannot find out who reported it.</h2>
+        </div>
+        <div class="slide-body">
+          <div class="vault-row">
+            <div class="card"><div class="kicker">Student side</div><h3>My Receipts</h3><p>Student sees only rows where <code>student_id = me</code>. Other students' receipts are invisible.</p></div>
+            <div class="wall"></div>
+            <div class="card accent"><div class="kicker">submissions table</div><h3>Title · category · location · status · hype</h3><p><b>No author column.</b> Not hidden, not encrypted: it does not exist.</p></div>
+            <div class="wall"></div>
+            <div class="card"><div class="kicker">Admin side</div><h3>Triage queue</h3><p>Admin code never queries receipts. The receipt function rejects an ADMIN session.</p></div>
+          </div>
+          <div class="grid g3" style="margin-top: 1.3em;">
+            <div class="card good fragment"><h3>Reflection test</h3><p>Build fails if anyone adds a student/user field to <code>Submission</code>.</p></div>
+            <div class="card good fragment"><h3>Database test</h3><p>An admin calling <code>portal_list_my_submissions()</code> gets a permission error.</p></div>
+            <div class="card good fragment"><h3>Export test</h3><p>CSV header contains no student, email, user or receipt column.</p></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span><b>AdminAnonymityRegressionTest</b> · <b>db-portal.test.js</b> · <b>ReportAndTrackingServiceTest</b></span><span>docs/SECURITY.md</span></div>
+      </section>
+
+      <!-- 6. Demo -->
+      <section class="slide" data-speaker="Muhammed Rinshid VP (driver) — each owner narrates their step" data-notes="LIVE DEMO, about 3 minutes. Rinshid drives, each owner says one sentence at their step. 1 Sign in as student on the phone portal (Nafih: domain gate). 2 File a report, show the receipt (Rahandeep: DAO insert plus receipt in one transaction). 3 Second student upvotes, try a second upvote, it toggles not duplicates (Nirmal). 4 Open the desktop admin app, the same report is in the queue with no author (Nafih). 5 Assign, then resolve with a note (Athil: history row). 6 Refresh the student phone, it shows RESOLVED with the note. 7 Export CSV. FALLBACK if campus Wi-Fi fails: switch the laptop and phone to a mobile hotspot. If Supabase itself is unreachable, play the screen recording of this run made the day before and say clearly that it is a recording.">
+        <div>
+          <div class="slide-eyebrow">Live demonstration <span class="po-tag">PO3</span></div>
+          <h2 class="slide-title">One report, end to end, across both apps</h2>
+        </div>
+        <div class="slide-body" style="font-size: 1.04em;">
+          <div class="flow">
+            <div class="step"><span class="n">1 · PHONE</span><h4>Sign in</h4><p>Non-<code>@tkmce.ac.in</code> email rejected</p></div>
+            <div class="arrow">→</div>
+            <div class="step"><span class="n">2 · PHONE</span><h4>Files a report</h4><p>Private receipt appears in My Receipts</p></div>
+            <div class="arrow">→</div>
+            <div class="step"><span class="n">3 · PHONE</span><h4>Others upvote</h4><p>Second vote toggles, never duplicates</p></div>
+            <div class="arrow">→</div>
+            <div class="step"><span class="n">4 · DESKTOP</span><h4>Admin triage</h4><p>Same report, no author shown</p></div>
+            <div class="arrow">→</div>
+            <div class="step"><span class="n">5 · DESKTOP</span><h4>Resolve</h4><p>Assign → resolve; note and history logged</p></div>
+            <div class="arrow">→</div>
+            <div class="step"><span class="n">6 · PHONE</span><h4>Student sees it</h4><p>RESOLVED + note; admin exports CSV</p></div>
+          </div>
+          <div class="card warn" style="margin-top: 1.4em;"><p><b>Fallback:</b> mobile hotspot if campus Wi-Fi fails; if the database is unreachable, a screen recording of this run made the day before, announced as a recording.</p></div>
+        </div>
+        <div class="slide-footer"><span>Driver: Rinshid · Each module owner narrates their step</span><span>Run-sheet: <b>docs/presentation/final/SPEAKER_RUNSHEET.md</b></span></div>
+      </section>
+
+      <!-- 7. Rinshid -->
+      <section class="slide" data-speaker="Muhammed Rinshid VP" data-notes="My module: getting everything to talk to one cloud database safely. Key concept I can defend: why the browser never gets the database password. The browser only gets a public key, and that key can only call six functions that each check the caller. I also own the CI pipeline: every push compiles Java, runs both test suites, and deploys to Vercel. What I learned beyond the syllabus: Postgres security definer functions and grants, and how a GitHub Actions pipeline is structured. (60s)">
+        <div class="member-head">
+          <div class="avatar">MR</div>
+          <div><div class="slide-eyebrow">Individual contribution <span class="po-tag">PO3</span> <span class="po-tag">PO8</span></div><h2 class="slide-title">Muhammed Rinshid VP · Team Lead</h2></div>
+        </div>
+        <div class="slide-body member-body">
+          <div class="grid g3">
+            <div class="card"><div class="kicker">I built</div><ul><li>Layered architecture and <code>DatabaseConfig</code> for Supabase</li><li>Live web portal with Supabase Auth</li><li><code>sql/web_portal.sql</code>: 6 role-checked RPCs</li><li>GitHub Actions CI/CD → Vercel</li></ul></div>
+            <div class="card"><div class="kicker">Concept I can defend</div><h3>Least privilege for the browser</h3><p>The browser holds only the public anon key. Direct table access is revoked; each RPC re-checks identity, <code>@tkmce.ac.in</code> domain and role. The DB password never leaves the server.</p></div>
+            <div class="card"><div class="kicker">Proof it works</div><ul><li><code>db-portal.test.js</code>: student, second student, admin, outsider</li><li><code>config-api.test.js</code>: only public URL + key exposed</li><li>Pipeline runs both suites on every push</li></ul></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Leadership: module split, integration of all five modules, presentation lead</span><span><b>.github/workflows/ci-cd.yml</b></span></div>
+      </section>
+
+      <!-- 8. Nirmal -->
+      <section class="slide" data-speaker="Nirmal Binoy" data-notes="My module is the hype engine. The rule is one upvote per student per report. We could check that in Java, but two clicks at the same time could both pass the check. So the rule lives in the database: a composite unique key on submission and student. The second insert is rejected by Postgres itself, and HypeService turns that into a clean message. Trending sorts by hype count, so the problem affecting the most students rises, not the loudest one. I also did the UML class model in Phase 1. (60s)">
+        <div class="member-head">
+          <div class="avatar">NB</div>
+          <div><div class="slide-eyebrow">Individual contribution <span class="po-tag">PO3</span> <span class="po-tag">PO8</span></div><h2 class="slide-title">Nirmal Binoy · Hype & Trending Engine</h2></div>
+        </div>
+        <div class="slide-body member-body">
+          <div class="grid g3">
+            <div class="card"><div class="kicker">I built</div><ul><li><code>HypeService</code> and <code>SubmissionHypeDAO</code></li><li>Trending ranking by verified upvotes</li><li>UML class diagram and domain models</li></ul></div>
+            <div class="card"><div class="kicker">Concept I can defend</div><h3>Rules that live in the database</h3><p>A Java "already voted?" check can race. <code>UNIQUE (submission_id, student_id)</code> makes a duplicate vote impossible even when two clicks arrive at once.</p></div>
+            <div class="card"><div class="kicker">Proof it works</div><ul><li><code>SubmissionAndHypeServiceTest</code>: duplicate vote rejected</li><li>Web test: second click un-hypes instead of double-counting</li></ul></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Constraint: <b>uq_hype_once_per_student</b> in sql/schema.sql</span><span>Phase 1 UML · docs/ARCHITECTURE.md</span></div>
+      </section>
+
+      <!-- 9. Nafih -->
+      <section class="slide" data-speaker="Mohammed Nafih" data-notes="My module is authentication and the vault. Three things. One, only exact tkmce.ac.in addresses get in; the regex is anchored so tkmce.ac.in.evil.com fails. Two, passwords are hashed with BCrypt work factor 10 and a fresh salt each time, so two students with the same password get different hashes. Three, wrong password and unknown email return the same message, so nobody can use the login screen to find out which emails are registered. I also wrote the first database submission workflow and our technical learning manual. Phase 2 used Google OAuth; we retired it because a desktop app cannot keep an OAuth client secret secret. (60s)">
+        <div class="member-head">
+          <div class="avatar">MN</div>
+          <div><div class="slide-eyebrow">Individual contribution <span class="po-tag">PO3</span> <span class="po-tag">PO8</span></div><h2 class="slide-title">Mohammed Nafih · Security & Anonymity Vault</h2></div>
+        </div>
+        <div class="slide-body member-body">
+          <div class="grid g3">
+            <div class="card"><div class="kicker">I built</div><ul><li><code>AuthService</code>, <code>ValidationUtil</code>, <code>PasswordUtil</code></li><li><code>StudentReceiptDAO</code>: the vault boundary</li><li>First DB submission workflow; technical learning manual</li></ul></div>
+            <div class="card"><div class="kicker">Concept I can defend</div><h3>Fail closed, leak nothing</h3><p>Anchored domain regex. BCrypt, work factor 10, fresh salt. Unknown email and wrong password give the <b>same</b> error, so the login form can't reveal who is registered.</p></div>
+            <div class="card"><div class="kicker">Proof it works</div><ul><li><code>ValidationAndPassword<wbr>UtilTest</code>: look-alike domains rejected</li><li><code>AuthServiceTest</code>: errors indistinguishable</li><li>Anonymity regression tests (slide 5)</li></ul></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Design change: Google OAuth retired; a desktop JAR can't keep a client secret</span><span><b>docs/SECURITY.md</b></span></div>
+      </section>
+
+      <!-- 10. Rahandeep -->
+      <section class="slide" data-speaker="Rahandeep RD" data-notes="My module is the schema, the DAO layer and the student GUI. Every query uses PreparedStatement, so input is sent as data and can never become SQL; there is no string concatenation into queries anywhere. Filing a report writes two rows, the submission and the private receipt. Those go in one transaction: if the receipt insert fails, the submission is rolled back, so we never get an orphan report with no owner receipt. On the GUI side I built the FlatLaf student dashboard with accordion cards and high-contrast status badges. (60s)">
+        <div class="member-head">
+          <div class="avatar">RD</div>
+          <div><div class="slide-eyebrow">Individual contribution <span class="po-tag">PO3</span> <span class="po-tag">PO8</span></div><h2 class="slide-title">Rahandeep RD · Database & Desktop GUI</h2></div>
+        </div>
+        <div class="slide-body member-body">
+          <div class="grid g3">
+            <div class="card"><div class="kicker">I built</div><ul><li><code>schema.sql</code>: 6 tables, FKs, CHECKs, indexes</li><li><code>SubmissionDAO</code> and the DAO pattern</li><li>FlatLaf student dashboard and report form</li></ul></div>
+            <div class="card"><div class="kicker">Concept I can defend</div><h3>Atomic, injection-proof writes</h3><p>Submission + receipt are inserted in <b>one transaction</b>: both commit or neither does. Every query is a <code>PreparedStatement</code>; no SQL is ever built from user text.</p></div>
+            <div class="card"><div class="kicker">Proof it works</div><ul><li><code>SubmissionAndHypeServiceTest</code>: pipeline round-trip</li><li><code>StatusColorContrastTest</code>: every status badge ≥ 4.5:1 (WCAG AA)</li></ul></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Packages: <b>aura.dao.*</b> · <b>aura.ui.student.*</b></span><span>docs/DATABASE.md</span></div>
+      </section>
+
+      <!-- 11. Athil -->
+      <section class="slide" data-speaker="Athil Rahuman A" data-notes="My module is the lifecycle, reports and testing. Every status change writes a history row with the old state, the new state and the admin. This week we made the Java side match the web side exactly: a no-op change writes nothing, and an unknown ticket is rejected instead of writing a broken history row. ReportService produces the dashboard counts and the CSV export. The CSV escapes quotes and commas per RFC 4180, so a title like Broken fan, Lab 3 stays in one column. I also did the very first Supabase connection for the team. (60s)">
+        <div class="member-head">
+          <div class="avatar">AR</div>
+          <div><div class="slide-eyebrow">Individual contribution <span class="po-tag">PO3</span> <span class="po-tag">PO8</span></div><h2 class="slide-title">Athil Rahuman A · Lifecycle, Reports & Testing</h2></div>
+        </div>
+        <div class="slide-body member-body">
+          <div class="grid g3">
+            <div class="card"><div class="kicker">I built</div><ul><li><code>TrackingService</code>: 5-state transitions + audit</li><li><code>ReportService</code>: KPI counts, CSV export</li><li>First Supabase connection; progress tracking</li></ul></div>
+            <div class="card"><div class="kicker">Concept I can defend</div><h3>An audit trail you can trust</h3><p>Each real change logs old → new state and who did it. No-op changes log nothing; unknown tickets are rejected. CSV follows RFC 4180 quoting.</p></div>
+            <div class="card"><div class="kicker">Proof it works</div><ul><li><code>ReportAndTrackingServiceTest</code>: 5 tests</li><li>SQL test: PENDING → RESOLVED history row</li></ul></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Packages: <b>aura.service.TrackingService</b> · <b>ReportService</b></span><span>docs/TESTING.md</span></div>
+      </section>
+
+      <!-- 12. Verification -->
+      <section class="slide" data-speaker="Athil Rahuman A" data-notes="How we know it works. 41 automated tests in total. 24 Java tests: 16 run anywhere with no network, 8 need the live database and run when credentials are present, for example in CI. 17 web tests: 4 run our real SQL migration on an in-memory Postgres, 13 drive the real portal in a Chromium browser, including phone width. Everything runs on every push. Be honest if asked: the browser tests mock Supabase Auth, so the final live sign-in with real accounts is a human checklist we run on the deployed site. (45s)">
+        <div>
+          <div class="slide-eyebrow">Verification <span class="po-tag">PO3</span> <span class="po-tag">PO5</span></div>
+          <h2 class="slide-title">41 automated tests, run on every push</h2>
+        </div>
+        <div class="slide-body">
+          <div class="grid g4">
+            <div class="card stat"><div class="num">16</div><div class="lbl">Java unit tests</div><div class="sub">Run offline: domain gate, BCrypt, CSV, audit trail, badge contrast, no user enumeration</div></div>
+            <div class="card stat"><div class="num">8</div><div class="lbl">Java DB tests</div><div class="sub">Against live Supabase: pipeline, single vote, vault</div></div>
+            <div class="card stat"><div class="num">4</div><div class="lbl">SQL / API tests</div><div class="sub">Real migration on in-memory Postgres; config endpoint</div></div>
+            <div class="card stat"><div class="num">13</div><div class="lbl">Browser tests</div><div class="sub">Playwright, desktop + phone: sign-in gate, student, admin, expiry</div></div>
+          </div>
+          <div class="card" style="margin-top: 1.3em;"><p><b>Pipeline:</b> push → compile Java 17 → JUnit 5 → Node + Playwright → build fat JAR → deploy to Vercel. <span class="pill">0 failures</span> <span class="pill warn">live sign-in: human checklist</span></p></div>
+        </div>
+        <div class="slide-footer"><span>Result on 18 Oct 2026: Java 24 / 24 pass on the live DB · Web 17 / 17 pass</span><span><b>docs/TESTING.md</b></span></div>
+      </section>
+
+      <!-- 13. Tools -->
+      <section class="slide" data-speaker="Rahandeep RD" data-notes="PO5 asks for modern tools in every phase. Read across the rows quickly. Highlight two choices and why: Supabase gave us a managed Postgres with auth so we spent our time on the domain, not on running a server. Playwright lets us test the real page in a real browser instead of trusting that it works. We also used an AI coding assistant, governed by our AGENT.md rules file, and every change it produced still had to pass the same tests. (50s)">
+        <div>
+          <div class="slide-eyebrow">Tools across every phase <span class="po-tag">PO5</span></div>
+          <h2 class="slide-title">A modern tool for every phase of the work</h2>
+        </div>
+        <div class="slide-body">
+          <table class="tbl">
+            <thead><tr><th>Phase</th><th>Tools</th><th>Why this one</th></tr></thead>
+            <tbody>
+              <tr><td>Requirements</td><td>Markdown PRD / TRD in Git, UN SDG mapping</td><td>Versioned with the code; reviewable in pull requests</td></tr>
+              <tr><td>Design</td><td>UML use-case, class, sequence diagrams · Mermaid Gantt</td><td>Phase 1 approved model drives the Java packages</td></tr>
+              <tr><td>Build: desktop</td><td>Java 17 · Maven · FlatLaf · JDBC (pgJDBC) · jBCrypt</td><td>Syllabus-aligned, one-command build</td></tr>
+              <tr><td>Build: web + data</td><td>Supabase Postgres + Auth · supabase-js · PWA · Vercel</td><td>Managed DB and auth; free tier; phone-installable</td></tr>
+              <tr><td>Testing</td><td>JUnit 5 · Node test runner · PGlite · Playwright</td><td>Real SQL and real browser, not mocks of our own code</td></tr>
+              <tr><td>DevOps</td><td>Git · GitHub · GitHub Actions · Vercel deploy</td><td>Every push tested and deployed automatically</td></tr>
+              <tr><td>Assistance</td><td>AI coding assistant governed by <code>AGENT.md</code></td><td>Same tests and review gate as human-written code</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="slide-footer"><span><b>pom.xml</b> · <b>package.json</b> · <b>.github/workflows/ci-cd.yml</b></span><span>docs/TRD.md</span></div>
+      </section>
+
+      <!-- 14. Society -->
+      <section class="slide" data-speaker="Nirmal Binoy" data-notes="PO6 asks us to consider, explain and evaluate. Left: who benefits and how. Middle: risks we take seriously, because an anonymous system can be misused. Right: how the campus can measure whether AURA actually helped, using data the system already records. We do not claim measured results yet, AURA has not been rolled out campus-wide. Say that plainly; it is more credible than an invented number. (60s)">
+        <div>
+          <div class="slide-eyebrow">Impact of engineering on society <span class="po-tag">PO6</span></div>
+          <h2 class="slide-title">Who it helps, what could go wrong, how we'd know</h2>
+        </div>
+        <div class="slide-body">
+          <div class="grid g3">
+            <div class="card good"><div class="kicker">Benefit</div><h3>Voice without risk</h3><ul><li>Students report safety, hygiene and lab issues without fear</li><li>Admins get a ranked queue, not a WhatsApp scroll</li><li>Public resolution notes build institutional trust (SDG 16)</li><li>Fewer lost lab hours from broken equipment (SDG 4)</li></ul></div>
+            <div class="card warn"><div class="kicker">Risk & mitigation</div><h3>Anonymity can be abused</h3><ul><li>Spam / false reports → verified <code>@tkmce.ac.in</code> accounts only, one vote each</li><li>Pile-ons → admin can REJECT with a public reason</li><li>Unequal access → works on any phone browser, no app install</li></ul></div>
+            <div class="card accent"><div class="kicker">How to evaluate</div><h3>Metrics already recorded</h3><ul><li>Median time PENDING → RESOLVED (from <code>submission_history</code>)</li><li>% resolved vs rejected per category</li><li>Repeat reports on the same location</li></ul><p style="margin-top: 0.5em;"><span class="pill warn">not yet measured: pre-rollout</span></p></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>UN SDG 16 Strong institutions · 11 Safe communities · 9 Infrastructure · 4 Quality education</span><span>docs/PRD.md §2</span></div>
+      </section>
+
+      <!-- 15. Ethics -->
+      <section class="slide" data-speaker="Mohammed Nafih" data-notes="PO7 is about recognising ethical issues and resolving them inclusively. Four concrete issues we hit and what we did. One, privacy versus accountability: we chose structural anonymity, and offset abuse with verified accounts. Two, data minimisation: we collect only what the feature needs; the CSV export has no identity, and that is tested. This lines up with India's DPDP Act 2023 principle of purpose limitation. Three, honesty: the portal has no sample or fake data; every screen shows the live database. Four, inclusivity: high-contrast colours, light and dark modes, works on low-end phones. And the gap we admit: staff without a college email cannot use it yet. (60s)">
+        <div>
+          <div class="slide-eyebrow">Ethics and inclusivity <span class="po-tag">PO7</span></div>
+          <h2 class="slide-title">Ethical issues we hit, and what we did</h2>
+        </div>
+        <div class="slide-body">
+          <div class="grid g2">
+            <div class="card"><h3>Privacy vs accountability</h3><p>Chose structural anonymity (no author column) over "trust the admin". Abuse is checked by verified accounts and one vote per student, not by identifying people.</p></div>
+            <div class="card"><h3>Collect only what's needed</h3><p>Passwords stored only as BCrypt hashes. CSV export carries no identity (tested). Matches the purpose-limitation principle of India's DPDP Act 2023.</p></div>
+            <div class="card"><h3>Never mislead users</h3><p>No sample or fake data: every screen shows the live database. The UI never shows success unless the database confirmed it.</p></div>
+            <div class="card"><h3>Inclusive by default</h3><p>WCAG AA contrast, light + dark themes, phone-first layout, free to use. <b>Known gap:</b> staff without a <code>@tkmce.ac.in</code> email can't report yet.</p></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Secrets never committed · service-role key never sent to the browser</span><span>docs/SECURITY.md · AGENT.md</span></div>
+      </section>
+
+      <!-- 16. Team -->
+      <section class="slide" data-speaker="Athil Rahuman A" data-notes="PO8 is about how we worked as a team. Each member owned one module end to end, code plus its tests. We split the code across different layers, so in practice the team covered several disciplines: database design, security, UI, process and DevOps. Integration happened through the shared database schema and Git: each of us worked on our module, and the lead integrated them on main. Each member also presents one of the rubric slides today, shown in the last column. (45s)">
+        <div>
+          <div class="slide-eyebrow">Team structure and collaboration <span class="po-tag">PO8</span> <span class="po-tag">PO10</span></div>
+          <h2 class="slide-title">Clear ownership, one shared contract</h2>
+        </div>
+        <div class="slide-body">
+          <table class="tbl">
+            <thead><tr><th>Member</th><th>Role</th><th>Owns end-to-end</th><th>Presents today</th></tr></thead>
+            <tbody>
+              <tr><td>Muhammed Rinshid VP</td><td>Team Lead</td><td>Architecture, cloud DB, web portal, CI/CD</td><td>Architecture, demo, cost</td></tr>
+              <tr><td>Nirmal Binoy</td><td>Core Developer</td><td>Hype engine, trending, UML model</td><td>Society impact, future work</td></tr>
+              <tr><td>Mohammed Nafih</td><td>Core Developer</td><td>Auth, BCrypt, domain gate, anonymity vault</td><td>Anonymity vault, ethics</td></tr>
+              <tr><td>Rahandeep RD</td><td>Database & GUI</td><td>Schema, DAO layer, FlatLaf student UI</td><td>Tools, self-learning</td></tr>
+              <tr><td>Athil Rahuman A</td><td>Docs & Process</td><td>Lifecycle, reports, CSV, testing</td><td>Testing, team, timeline</td></tr>
+            </tbody>
+          </table>
+          <div class="grid g3" style="margin-top: 1.1em;">
+            <div class="card"><p><b>Shared contract:</b> one schema (<code>sql/schema.sql</code>) used by both the desktop and web apps.</p></div>
+            <div class="card"><p><b>Git workflow:</b> work merged into <code>main</code>; CI runs both test suites on every push and PR.</p></div>
+            <div class="card"><p><b>Definition of done:</b> compiles clean, has a JUnit test, matches the UML, keeps the vault (<code>AGENT.md</code> §6).</p></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Multidisciplinary: database · security · UI/UX · DevOps · documentation</span><span>README.md §3</span></div>
+      </section>
+
+      <!-- 17. Timeline -->
+      <section class="slide" data-speaker="Athil Rahuman A" data-notes="PO10: time frame specified and followed. The plan was ten weeks, approved in Phase 1. Every planned milestone was delivered on schedule; the dates come from our Git history and task log, not from memory. The one change: after Phase 2 we added the live web portal with real authentication, an extension beyond the original plan, delivered in the three weeks after Phase 2 while keeping the original scope intact. (45s)">
+        <div>
+          <div class="slide-eyebrow">Plan vs actual <span class="po-tag">PO10</span></div>
+          <h2 class="slide-title">10-week plan, followed, plus one extension</h2>
+          <p class="slide-subtitle">Dates are from the Git history and the extension's task log.</p>
+        </div>
+        <div class="slide-body">
+          <div class="timeline">
+            <div class="tl"><div class="date">25 AUG</div><h4>Repo + requirements</h4><p>PRD, TRD, scope approved</p></div>
+            <div class="tl"><div class="date">05 SEP</div><h4>Architecture + schema</h4><p>UML, 6-table Supabase schema</p></div>
+            <div class="tl"><div class="date">06–11 SEP</div><h4>DAO, services, GUI</h4><p>In-memory → live DB; CI pipeline</p></div>
+            <div class="tl"><div class="date">13 SEP</div><h4>Phase 2 review</h4><p>Core system demonstrated</p></div>
+            <div class="tl"><div class="date">24 SEP – 12 OCT</div><h4>Extension: live portal</h4><p>Supabase Auth, RPC security, Playwright</p></div>
+            <div class="tl now"><div class="date">17 OCT</div><h4>Final evaluation</h4><p>Integrated, tested, deployed</p></div>
+          </div>
+          <div class="grid g3" style="margin-top: 1.6em;">
+            <div class="card good"><h3>10 / 10</h3><p>planned weekly milestones delivered</p></div>
+            <div class="card accent"><h3>+1 extension</h3><p>live web portal with real authentication, beyond the original plan</p></div>
+            <div class="card warn"><h3>1 design change</h3><p>Google OAuth → email/password, for security (slide 9)</p></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Gantt chart and planned-vs-completed matrix</span><span><b>docs/ROADMAP.md</b></span></div>
+      </section>
+
+      <!-- 18. Cost -->
+      <section class="slide" data-speaker="Muhammed Rinshid VP" data-notes="PO10 also asks for cost specification. Our build cost in cash was zero: every tool is open source or on a free tier. The real cost was team time, about 400 person-hours, which we value at a notional student-intern rate to show we understand it is not free. To run AURA for the whole campus, we would move to paid tiers, roughly 45 US dollars or about 4,300 rupees a month. The main reason is reliability: a free Supabase project pauses itself after about a week without activity, and the paid tier adds daily backups. Or the college can host Postgres on its own server and pay only for the machine.">
+        <div>
+          <div class="slide-eyebrow">Cost specification <span class="po-tag">PO10</span></div>
+          <h2 class="slide-title">₹0 to build. About ₹4,300 a month to run.</h2>
+        </div>
+        <div class="slide-body">
+          <div class="grid g2">
+            <div class="card">
+              <div class="kicker">Development (actual)</div>
+              <table class="tbl cost">
+                <tbody>
+                  <tr><td>Supabase (DB + Auth)</td><td>Free tier</td><td>₹0</td></tr>
+                  <tr><td>Vercel hosting</td><td>Hobby tier</td><td>₹0</td></tr>
+                  <tr><td>GitHub + Actions CI</td><td>Public repo</td><td>₹0</td></tr>
+                  <tr><td>JDK, Maven, FlatLaf, JUnit, Playwright</td><td>Open source</td><td>₹0</td></tr>
+                  <tr><td>Team effort</td><td>5 × 10 wk × 8 h</td><td>~400 h</td></tr>
+                  <tr class="total"><td>Notional labour value</td><td>at ₹200 / h</td><td>≈ ₹80,000</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card">
+              <div class="kicker">Campus deployment (estimate)</div>
+              <table class="tbl cost">
+                <tbody>
+                  <tr><td>Supabase Pro</td><td>Daily backups, no auto-pause</td><td>~US$25 / mo</td></tr>
+                  <tr><td>Vercel Pro</td><td>Commercial use, 1 seat</td><td>~US$20 / mo</td></tr>
+                  <tr><td>Domain (optional)</td><td>e.g. aura.tkmce.ac.in</td><td>₹0 (college DNS)</td></tr>
+                  <tr class="total"><td>Total</td><td></td><td>≈ ₹4,300 / mo</td></tr>
+                </tbody>
+              </table>
+              <p class="small muted" style="margin-top: 0.8em;"><b>Alternative:</b> self-host PostgreSQL on a college server. Licence cost ₹0; only hardware and admin time.</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>List prices, Oct 2026 · US$1 ≈ ₹95</span><span>Labour rate is notional, for planning only</span></div>
+      </section>
+
+      <!-- 19. Learning -->
+      <section class="slide" data-speaker="Rahandeep RD" data-notes="PO11: adaptability and self-learning. Left: things none of us knew in August that we had to learn ourselves from documentation. Right: three times the plan met reality and we changed course instead of forcing it. The OAuth one is the best story: we built it, it worked, and then we removed it because we learned why it was the wrong design for a desktop app. Ending on that shows we learned, not just copied. (50s)">
+        <div>
+          <div class="slide-eyebrow">Adaptability and self-learning <span class="po-tag">PO11</span></div>
+          <h2 class="slide-title">What we taught ourselves, and when we changed course</h2>
+        </div>
+        <div class="slide-body">
+          <div class="grid g2">
+            <div class="card">
+              <div class="kicker">Learned beyond the syllabus</div>
+              <ul>
+                <li>Cloud PostgreSQL over JDBC, connection management</li>
+                <li>Postgres grants and <code>SECURITY DEFINER</code> functions</li>
+                <li>OAuth 2.0 PKCE (RFC 8252) and JWT sessions</li>
+                <li>Browser end-to-end testing with Playwright</li>
+                <li>CI/CD with GitHub Actions; PWAs and service workers</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="kicker">Times we changed course</div>
+              <ul>
+                <li><b>In-memory → live DB</b> (6 → 11 Sep): the prototype service was replaced by real DAOs once the schema stabilised</li>
+                <li><b>Google OAuth → email/password:</b> a desktop JAR cannot keep an OAuth client secret secret</li>
+                <li><b>Local-storage web demo → real RPCs:</b> the portal must never show success that the DB did not confirm</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Self-study log</span><span><b>docs/AURA_TECHNICAL_LEARNING_MANUAL.md</b></span></div>
+      </section>
+
+      <!-- 20. Limits -->
+      <section class="slide" data-speaker="Nirmal Binoy" data-notes="Be upfront about limits; evaluators reward honesty here. Three current limits and three next steps. Live sign-in with real accounts needs the college to provision accounts in Supabase, the code is ready and documented. (40s)">
+        <div>
+          <div class="slide-eyebrow">Limitations and future work</div>
+          <h2 class="slide-title">What it doesn't do yet</h2>
+        </div>
+        <div class="slide-body">
+          <div class="grid g3">
+            <div class="card warn"><div class="kicker">Limitation</div><h3>Account provisioning</h3><p>No self-sign-up by design; the college must create accounts in Supabase Auth before live use.</p></div>
+            <div class="card warn"><div class="kicker">Limitation</div><h3>No notifications</h3><p>Students must open the app to see a status change.</p></div>
+            <div class="card warn"><div class="kicker">Limitation</div><h3>Email-only access</h3><p>Contract staff without a college email can't report.</p></div>
+            <div class="card accent fragment"><div class="kicker">Next</div><h3>Push notifications</h3><p>Service worker is already installed; add Web Push on status change.</p></div>
+            <div class="card accent fragment"><div class="kicker">Next</div><h3>Photo evidence</h3><p><code>photo_url</code> column exists; add Supabase Storage upload.</p></div>
+            <div class="card accent fragment"><div class="kicker">Next</div><h3>Resolution analytics</h3><p>Time-to-resolve dashboards from <code>submission_history</code>.</p></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Owner setup checklist</span><span><b>docs/WEB_PORTAL_AUTH.md</b></span></div>
+      </section>
+
+      <!-- 21. Close -->
+      <section class="slide" data-speaker="Muhammed Rinshid VP" data-notes="Close in three lines: working, integrated, responsible. Thank the evaluators and invite questions. Keep the G key ready to jump to any slide when a question comes in. (30s)">
+        <div class="slide-body" style="justify-content: center;">
+          <div class="slide-eyebrow">Conclusion</div>
+          <p class="big-quote">AURA is <em>working</em>, <em>integrated</em> across desktop, web and phone, and built so that reporting a problem never costs a student their safety.</p>
+          <div class="grid g3" style="margin-top: 2.2em;">
+            <div class="card stat"><div class="num">5 / 5</div><div class="lbl">modules integrated</div><div class="sub">on one cloud database</div></div>
+            <div class="card stat"><div class="num">41</div><div class="lbl">automated tests</div><div class="sub">run on every push</div></div>
+            <div class="card stat"><div class="num">0</div><div class="lbl">author columns</div><div class="sub">in the submissions table</div></div>
+          </div>
+          <p class="slide-subtitle" style="margin-top: 1.8em; font-size: 1.4em; font-weight: 600; color: var(--text-primary);">Thank you. Questions?</p>
+        </div>
+        <div class="slide-footer"><span>Live: <b>aura-campus-three.vercel.app</b></span><span>Code: <b>github.com/rinshidvp/AURA</b></span></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="deck-footer">
+    <div class="hud-group">
+      <button class="btn" onclick="prevSlide()">← Prev</button>
+      <button class="btn btn-primary" onclick="nextSlide()">Next →</button>
+      <span class="timer-badge" onclick="toggleTimer()" id="timerDisplay" title="Start / pause 20-minute timer">⏱ 20:00</span>
+    </div>
+    <div class="progress-dots" id="dotsContainer"></div>
+    <div class="hud-group small" style="color: var(--text-muted);">← → Space · G grid · S notes · T theme · F full</div>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="overviewModal" onclick="closeOverview(event)">
+  <div class="overview-grid" id="overviewGrid"></div>
+</div>
+
+<div class="notes-drawer" id="notesDrawer">
+  <div class="notes-header"><span>SPEAKER NOTES · SLIDE <span id="notesSlideNum">1</span> · <span id="notesSpeaker"></span></span>
+    <button class="btn btn-icon" style="width: 24px; height: 24px;" onclick="toggleNotes()" aria-label="Close notes">✕</button></div>
+  <div class="notes-body" id="notesContent"></div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  const $ = (id) => document.getElementById(id);
+  const themes = ['editorial-light', 'cyber-dark', 'executive'];
+  let currentSlide = 0;
+  let themeIdx = 0;
+  let remaining = 20 * 60;
+  let timer = null;
+
+  function initDeck() {
+    slides.forEach((slide, idx) => {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.onclick = () => goToSlide(idx);
+      $('dotsContainer').appendChild(dot);
+
+      const card = document.createElement('div');
+      card.className = 'overview-card';
+      const title = slide.querySelector('.slide-title, .hero-title, .big-quote')?.textContent.trim() || `Slide ${idx + 1}`;
+      card.innerHTML = `<div class="card-num">SLIDE ${idx + 1}</div><div class="card-title"></div><div class="card-who"></div>`;
+      card.querySelector('.card-title').textContent = title.length > 70 ? title.slice(0, 70) + '…' : title;
+      card.querySelector('.card-who').textContent = slide.dataset.speaker || '';
+      card.onclick = () => { goToSlide(idx); $('overviewModal').classList.remove('active'); };
+      $('overviewGrid').appendChild(card);
+    });
+    const fromHash = parseInt(location.hash.slice(1), 10);
+    if (fromHash >= 1 && fromHash <= totalSlides) currentSlide = fromHash - 1;
+    render();
+  }
+
+  function render() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+    [...$('dotsContainer').children].forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+    [...$('overviewGrid').children].forEach((c, i) => c.classList.toggle('active', i === currentSlide));
+    const slide = slides[currentSlide];
+    $('slideCounter').textContent = `Slide ${currentSlide + 1} / ${totalSlides}`;
+    $('progressFill').style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+    $('speakerNow').textContent = slide.dataset.speaker || '';
+    $('notesSlideNum').textContent = currentSlide + 1;
+    $('notesSpeaker').textContent = slide.dataset.speaker || '';
+    $('notesContent').textContent = slide.dataset.notes || 'No notes.';
+    history.replaceState(null, '', `#${currentSlide + 1}`);
+  }
+
+  function nextSlide(skip = false) {
+    const hidden = [...slides[currentSlide].querySelectorAll('.fragment:not(.visible)')];
+    if (!skip && hidden.length) { hidden[0].classList.add('visible'); return; }
+    hidden.forEach((f) => f.classList.add('visible'));
+    if (currentSlide < totalSlides - 1) { currentSlide++; render(); }
+  }
+
+  function prevSlide() {
+    const shown = slides[currentSlide].querySelectorAll('.fragment.visible');
+    if (shown.length) { shown[shown.length - 1].classList.remove('visible'); return; }
+    if (currentSlide > 0) {
+      currentSlide--;
+      slides[currentSlide].querySelectorAll('.fragment').forEach((f) => f.classList.add('visible'));
+      render();
+    }
+  }
+
+  function goToSlide(idx) {
+    if (idx < 0 || idx >= totalSlides) return;
+    currentSlide = idx;
+    slides[idx].querySelectorAll('.fragment').forEach((f) => f.classList.add('visible'));
+    render();
+  }
+
+  function toggleOverview() { $('overviewModal').classList.toggle('active'); }
+  function closeOverview(e) { if (e.target === $('overviewModal')) $('overviewModal').classList.remove('active'); }
+  function toggleNotes() { $('notesDrawer').classList.toggle('active'); }
+  function cycleTheme() {
+    themeIdx = (themeIdx + 1) % themes.length;
+    document.documentElement.setAttribute('data-theme', themes[themeIdx]);
+  }
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  }
+  function toggleTimer() {
+    if (timer) { clearInterval(timer); timer = null; return; }
+    timer = setInterval(() => {
+      remaining--;
+      const abs = Math.abs(remaining);
+      const text = `${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
+      $('timerDisplay').textContent = `⏱ ${remaining < 0 ? '+' : ''}${text}`;
+      $('timerDisplay').classList.toggle('over', remaining < 0);
+    }, 1000);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    const k = e.key;
+    if (k === 'ArrowRight' || k === ' ' || k === 'PageDown') { e.preventDefault(); nextSlide(e.shiftKey); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); prevSlide(); }
+    else if (k === 'Home') goToSlide(0);
+    else if (k === 'End') goToSlide(totalSlides - 1);
+    else if (k === 'g' || k === 'G') toggleOverview();
+    else if (k === 's' || k === 'S') toggleNotes();
+    else if (k === 't' || k === 'T') cycleTheme();
+    else if (k === 'f' || k === 'F') toggleFullscreen();
+    else if (k === 'Escape') { $('overviewModal').classList.remove('active'); $('notesDrawer').classList.remove('active'); }
+  });
+
+  let touchX = 0;
+  document.addEventListener('touchstart', (e) => { touchX = e.changedTouches[0].screenX; });
+  document.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].screenX - touchX;
+    if (dx < -50) nextSlide();
+    if (dx > 50) prevSlide();
+  });
+
+  initDeck();
+</script>
+</body>
+</html>

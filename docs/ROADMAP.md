@@ -24,9 +24,12 @@ gantt
     Week 6: Auth & Submission Pipeline Engine          :done,    des6, 2026-09-05, 2026-09-11
     Week 7: Admin Resolution Workflow & Hype Engine    :done,    des7, 2026-09-12, 2026-09-18
     Week 8: Modern FlatLaf Desktop GUI                 :done,    des8, 2026-09-19, 2026-09-25
-    section Final Phase (In Progress)
-    Week 9: Automated Testing & Security Audit         :active,  des9, 2026-09-26, 2026-10-02
-    Week 10: Golden-Path Walkthrough & Presentation    :         des10, 2026-10-03, 2026-10-09
+    section Final Phase (Completed)
+    Week 9: Automated Testing & Security Audit         :done,    des9, 2026-09-26, 2026-10-02
+    Week 10: Golden-Path Walkthrough & Presentation    :done,    des10, 2026-10-03, 2026-10-09
+    section Extension (Completed)
+    Live Web Portal: Supabase Auth + RPC Security      :done,    ext1, 2026-09-24, 2026-10-12
+    Final Evaluation Deck & Report                     :done,    ext2, 2026-10-13, 2026-10-17
 ```
 
 ---
@@ -45,8 +48,11 @@ To satisfy the academic evaluation rubric, the table below documents the planned
 | **Week 6: Auth & Engine** | • Password hashing & verification<br>• Submission creation pipeline<br>• Status state transition engine | **Completed** | `aura.util.PasswordUtil`, `aura.util.ValidationUtil`, `aura.service.AuthService` |
 | **Week 7: Resolution Workflow** | • Issue assignment engine<br>• Resolution note recording<br>• Dashboard metrics aggregation | **Completed** | `aura.service.TrackingService`, `aura.service.ReportService`, `aura.dao.ResolutionNoteDAO` |
 | **Week 8: Modern Desktop GUI** | • Desktop application layout<br>• FlatLaf modern UI styling<br>• Event handlers & data binding | **Completed** | `aura.ui.LoginFrame`, `aura.ui.student.*`, `aura.ui.admin.*` |
-| **Week 9: Testing & Security** | • JUnit 5 test suite execution<br>• Anonymity regression verification | **In Progress** | [`docs/TESTING.md`](TESTING.md), `src/test/java/aura/*` |
-| **Week 10: Golden Walkthrough** | • End-to-end presentation demo<br>• Final academic defense | **Demo-Ready** | [`docs/PRD.md`](PRD.md) §5 Walkthrough |
+| **Week 9: Testing & Security** | • JUnit 5 test suite execution<br>• Anonymity regression verification | **Completed** | [`docs/TESTING.md`](TESTING.md): 23 JUnit tests (15 offline, 8 DB) + 18 web tests, all passing; CI on every push |
+| **Week 10: Golden Walkthrough** | • End-to-end presentation demo<br>• Final academic defense | **Completed** | Phase 2 deck [`presentation/`](presentation/); final deck [`presentation/final/`](presentation/final/index.html) |
+| **Extension: Live Web Portal** | • Supabase Auth email/password sign-in<br>• Database RPCs with role checks<br>• Playwright browser tests | **Completed (code)** | [`sql/web_portal.sql`](../sql/web_portal.sql), [`WEB_PORTAL_AUTH.md`](WEB_PORTAL_AUTH.md), `tests/`. Live sign-in needs owner-supplied Vercel/Supabase settings and the human acceptance checklist |
+
+**Schedule note:** The 10-week plan was followed. One deliberate change: desktop Google OAuth (Phase 2) was replaced by institutional email/password sign-in (BCrypt in the desktop app, Supabase Auth on the web portal), because an OAuth client secret cannot be kept secret inside a distributed desktop JAR and the hosted portal needed one direct sign-in method.
 
 ---
 

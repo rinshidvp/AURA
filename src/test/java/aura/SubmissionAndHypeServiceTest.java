@@ -51,8 +51,8 @@ public class SubmissionAndHypeServiceTest {
     @Test
     @DisplayName("AuthService successfully authenticates valid TKMCE credentials")
     void testAuthServiceSuccess() {
-        org.junit.jupiter.api.Assumptions.assumeTrue(aura.config.DatabaseConfig.isConfigured(),
-                "Skipping live DB integration test: Supabase credentials not configured in this environment");
+        org.junit.jupiter.api.Assumptions.assumeTrue(aura.config.DatabaseConfig.isReachable(),
+                "Skipping live DB integration test: Supabase database is not configured or reachable");
 
         User user = authService.authenticate("student1@tkmce.ac.in", "password123");
         assertNotNull(user);
@@ -63,6 +63,9 @@ public class SubmissionAndHypeServiceTest {
     @Test
     @DisplayName("AuthService rejects non-institutional emails and invalid passwords")
     void testAuthServiceFailures() {
+        org.junit.jupiter.api.Assumptions.assumeTrue(aura.config.DatabaseConfig.isReachable(),
+                "Skipping live DB integration test: Supabase database is not configured or reachable");
+
         assertThrows(IllegalArgumentException.class, () ->
                 authService.authenticate("outsider@gmail.com", "password123"));
 
@@ -73,8 +76,8 @@ public class SubmissionAndHypeServiceTest {
     @Test
     @DisplayName("Submission creation registers private receipt in Anonymity Vault")
     void testSubmissionCreationAndVaultReceipt() {
-        org.junit.jupiter.api.Assumptions.assumeTrue(aura.config.DatabaseConfig.isConfigured(),
-                "Skipping live DB integration test: Supabase credentials not configured in this environment");
+        org.junit.jupiter.api.Assumptions.assumeTrue(aura.config.DatabaseConfig.isReachable(),
+                "Skipping live DB integration test: Supabase database is not configured or reachable");
 
         int studentId = 1;
         Submission newSub = new Submission(0, "Broken Switchboard in Seminar Hall",
@@ -98,8 +101,8 @@ public class SubmissionAndHypeServiceTest {
     @Test
     @DisplayName("Hype upvoting enforces one vote per student with toggle behavior")
     void testHypeToggling() {
-        org.junit.jupiter.api.Assumptions.assumeTrue(aura.config.DatabaseConfig.isConfigured(),
-                "Skipping live DB integration test: Supabase credentials not configured in this environment");
+        org.junit.jupiter.api.Assumptions.assumeTrue(aura.config.DatabaseConfig.isReachable(),
+                "Skipping live DB integration test: Supabase database is not configured or reachable");
 
         int subId = 85;
         int studentId = 3;
@@ -123,8 +126,8 @@ public class SubmissionAndHypeServiceTest {
     @Test
     @DisplayName("ReportService generates RFC-4180 compliant CSV")
     void testReportServiceCsvGeneration() {
-        org.junit.jupiter.api.Assumptions.assumeTrue(aura.config.DatabaseConfig.isConfigured(),
-                "Skipping live DB integration test: Supabase credentials not configured in this environment");
+        org.junit.jupiter.api.Assumptions.assumeTrue(aura.config.DatabaseConfig.isReachable(),
+                "Skipping live DB integration test: Supabase database is not configured or reachable");
 
         String csv = reportService.generateCsvReport();
         assertNotNull(csv);

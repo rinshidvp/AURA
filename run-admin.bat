@@ -1,6 +1,11 @@
 @echo off
 title AURA — Admin Governance Console
 cd /d "%~dp0"
+if not exist "%JAVA_HOME%\bin\java.exe" (
+    set "JAVA_HOME="
+    for /d %%J in (".tools\jdk17-download\jdk-*") do set "JAVA_HOME=%%~fJ"
+)
+if defined JAVA_HOME set "PATH=%JAVA_HOME%\bin;%PATH%"
 echo ========================================================
 echo   Launching AURA Admin Governance Console (Slide 22)
 echo   Logged in as: Campus Maintenance (Administrator)

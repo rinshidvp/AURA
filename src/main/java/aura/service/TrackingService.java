@@ -37,12 +37,18 @@ public class TrackingService {
         }
 
         Optional<Submission> currentOpt = submissionDAO.findById(submissionId);
-        SubmissionStatus oldStatus = currentOpt.map(Submission::getStatus).orElse(null);
+        if (currentOpt.isEmpty()) {
+            throw new IllegalArgumentException("Submission " + submissionId + " does not exist.");
+        }
+        SubmissionStatus oldStatus = currentOpt.get().getStatus();
 
         submissionDAO.updateStatus(submissionId, newStatus);
 
-        SubmissionHistory history = new SubmissionHistory(0, submissionId, oldStatus, newStatus, adminId, adminName);
-        historyDAO.create(history);
+        // Only record real transitions, matching the web portal's portal_admin_update_submission RPC.
+        if (oldStatus != newStatus) {
+            SubmissionHistory history = new SubmissionHistory(0, submissionId, oldStatus, newStatus, adminId, adminName);
+            historyDAO.create(history);
+        }
     }
 
     public void addResolutionNote(int submissionId, int adminId, String adminName, String noteText) {

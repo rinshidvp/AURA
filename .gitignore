@@ -35,3 +35,6 @@ Thumbs.db
 scratch/
 
 .vercel
+node_modules/
+playwright-report/
+test-results/

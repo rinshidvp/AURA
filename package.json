@@ -1,0 +1,11 @@
+{
+  "name": "aura-web-portal-tests",
+  "private": true,
+  "scripts": {
+    "test:web": "node --test tests/config-api.test.js tests/db-portal.test.js && playwright test"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@playwright/test": "^1.55.0"
+  }
+}

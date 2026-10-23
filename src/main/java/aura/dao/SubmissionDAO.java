@@ -24,10 +24,18 @@ import java.util.Optional;
 public class SubmissionDAO {
 
     public Submission create(Submission submission) {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            return create(conn, submission);
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error creating submission: " + e.getMessage(), e);
+        }
+    }
+
+    /** Inserts on the caller's connection so it can join a wider transaction. */
+    public Submission create(Connection conn, Submission submission) {
         String sql = "INSERT INTO submissions (title, description, type, category, location, priority, status, photo_url) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING submission_id, created_at";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, submission.getTitle());
             ps.setString(2, submission.getDescription());
             ps.setString(3, submission.getType().name());

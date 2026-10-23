@@ -21,67 +21,43 @@ In accordance with [`AGENT.md`](../AGENT.md), every class created in `aura.dao` 
 
 ```
 src/test/java/aura/
-├── dao/
-│   ├── UserDAOTest.java                   # User CRUD, duplicate email rejection
-│   ├── SubmissionDAOTest.java             # Submission insert, category query, status update
-│   ├── StudentReceiptDAOTest.java         # Anonymity vault receipt mapping
-│   ├── SubmissionHypeDAOTest.java         # Hype counting, duplicate vote prevention
-│   ├── ResolutionNoteDAOTest.java         # Note attachment and retrieval
-│   └── SubmissionHistoryDAOTest.java      # State transition audit logging
-├── service/
-│   ├── AuthServiceTest.java               # Login, domain rejection, BCrypt verification
-│   ├── SubmissionServiceTest.java         # Submission creation and categorization
-│   ├── TrackingServiceTest.java           # "My Submissions" resolution & state changes
-│   ├── HypeServiceTest.java               # Trending calculation and single-vote enforcement
-│   └── ReportServiceTest.java             # CSV generation and dashboard metrics
-├── security/
-│   └── AdminAnonymityRegressionTest.java  # Security gate: verifies admin queries never access student ID
-└── util/
-    ├── PasswordUtilTest.java              # BCrypt hash and salt verification
-    └── ValidationUtilTest.java            # @tkmce.ac.in domain regex validation
+├── AuthServiceTest.java                    # Domain + blank-credential rejection, no user enumeration (offline)
+├── ValidationAndPasswordUtilTest.java      # @tkmce.ac.in gate, submission bounds, BCrypt salt/work factor (offline)
+├── ReportAndTrackingServiceTest.java       # Dashboard counts, RFC 4180 CSV, status audit trail, notes (offline, in-memory DAOs)
+├── StatusColorContrastTest.java            # Every status badge meets WCAG AA 4.5:1 contrast (offline)
+├── AdminAnonymityRegressionTest.java       # Submission model has no author field + admin queue leaks no identity (DB)
+├── security/AdminAnonymityRegressionTest.java # Reflection scan: Submission exposes no student/user accessor (offline)
+├── SubmissionAndHypeServiceTest.java       # Submission pipeline, receipts, single-vote hype enforcement (DB)
+└── SupabaseConnectionTest.java             # Live Supabase connectivity smoke test (DB)
+
+tests/                                      # Web portal (Node + Playwright)
+├── config-api.test.js                      # /api/config exposes only public URL + anon key; rejects bad origins
+├── db-portal.test.js                       # sql/web_portal.sql on in-memory Postgres: roles, RPC grants, receipt isolation
+└── portal.spec.js                          # 13 browser flows: sign-in gate, student/admin, no-demo checks, mobile, session expiry
 ```
+
+**Current result (2026-10-18):** Java 24/24 pass against the live Supabase database (offline, the 8 database tests skip and 16 pass). Web 17/17 pass.
 
 ---
 
 ## 3. Key Regression Tests
 
-### 3.1 Duplicate Hype Prevention Test (`SubmissionHypeDAOTest`)
-Verifies that the database and service layer reject a student attempting to upvote the same submission twice:
+### 3.1 Duplicate Hype Prevention (`SubmissionAndHypeServiceTest`)
+A second hype by the same student on the same submission is rejected; the composite `UNIQUE (submission_id, student_id)` constraint backs this at the database level.
+
+### 3.2 Institutional Domain Gate (`AuthServiceTest`, `ValidationAndPasswordUtilTest`)
+`student@gmail.com`, `student@tkmce.ac.in.evil.com`, `student@fake-tkmce.ac.in` and sub-domain addresses are rejected before any database lookup:
 ```java
-@Test
-void testDuplicateHypeThrowsException() {
-    hypeService.addHype(testSubmissionId, testStudentId);
-    assertThrows(DuplicateHypeException.class, () -> {
-        hypeService.addHype(testSubmissionId, testStudentId);
-    });
-}
+assertThrows(IllegalArgumentException.class,
+        () -> authService.authenticate("student@gmail.com", "password"));
+assertFalse(ValidationUtil.isValidTkmceEmail("student@tkmce.ac.in.evil.com"));
 ```
 
-### 3.2 Institutional Domain Rejection Test (`AuthServiceTest`)
-Verifies that non-TKMCE email addresses are rejected during authentication:
-```java
-@Test
-void testNonTkmceEmailRejected() {
-    assertThrows(InvalidCredentialsException.class, () -> {
-        authService.register("External User", "user@gmail.com", "pass123", Role.STUDENT);
-    });
-}
-```
+### 3.3 Status Audit Trail (`ReportAndTrackingServiceTest`)
+Every real status change writes a `submission_history` row with old and new state; a no-op change writes nothing and an unknown ticket is rejected, matching the web portal's `portal_admin_update_submission` RPC.
 
-### 3.3 Admin Anonymity Regression Test (`AdminAnonymityRegressionTest`)
-Scans all methods reachable from `AdminDashboardFrame` and `AdminSubmissionService` to verify that no method returns or queries student identification:
-```java
-@Test
-void testAdminQueriesDoNotExposeStudentIdentity() throws SQLException {
-    List<Submission> adminQueue = submissionService.getAllSubmissionsForAdmin();
-    for (Submission sub : adminQueue) {
-        // Confirms that the public Submission model does not leak author identity
-        assertNotNull(sub.getTitle());
-        assertNotNull(sub.getCategory());
-        // Submission class has no getStudentId() method in the public model
-    }
-}
-```
+### 3.4 Admin Anonymity Regression (`AdminAnonymityRegressionTest`)
+Reflection proves `Submission` has no student/user field or accessor, and the admin queue returned from the database carries no identity metadata. The web equivalent (`db-portal.test.js`) proves an ADMIN session gets a permission error from the receipt RPC.
 
 ---
 
@@ -93,3 +69,19 @@ Tests run against an isolated test database configured in `src/test/resources/db
 # Run the complete automated test suite
 mvn test
 ```
+
+Database integration tests use `DatabaseConfig.isReachable()` and are skipped when no usable Supabase database is available; they run when valid, reachable credentials are supplied. The source/model regression tests still run offline.
+
+---
+
+## 5. Web Portal Authentication and Interaction Tests
+
+The web suite runs the portal SQL migration against an isolated in-memory PostgreSQL instance, verifying profile provisioning, student/admin authorization, denied direct table access, report/upvote persistence, status/history/note writes, and receipt isolation. Its Playwright suite mocks the external Supabase/Auth boundary while exercising the real page, handlers, and user-visible results: signed-out gate, unapproved identity handling, student/admin controls, navigation/search/filtering, report creation and receipts, upvote toggling, admin status/resolution updates, CSV export, QR/copy behavior, mobile navigation, session expiry, and missing configuration. It also covers the public home page (section links, FAQ, theme toggle), the absence of any demo or sample-data path (including the retired `#/demo` link) and no horizontal scrolling at phone widths.
+
+```bash
+npm ci
+npx playwright install chromium
+npm run test:web
+```
+
+The test adapter does not verify real Supabase credentials, SQL permissions, or deployment variables. Complete the real-account human acceptance checklist in [`WEB_PORTAL_AUTH.md`](WEB_PORTAL_AUTH.md) after applying [`../sql/web_portal.sql`](../sql/web_portal.sql) and configuring Vercel/Supabase.

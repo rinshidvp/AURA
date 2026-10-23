@@ -1,10 +1,8 @@
 package aura.ui;
 
-import aura.config.OAuthConfig;
 import aura.enums.Role;
 import aura.model.User;
 import aura.service.AuthService;
-import aura.service.GoogleOAuthService;
 import aura.ui.admin.AdminDashboardFrame;
 import aura.ui.common.ModernButton;
 import aura.ui.common.UITheme;
@@ -16,7 +14,7 @@ import java.awt.*;
 
 /**
  * Modern login window for AURA.
- * Supports primary Google OAuth 2.0 sign-in and fallback institutional credentials.
+ * Provides institutional email/password sign-in.
  */
 public class LoginFrame extends JFrame {
     private final AuthService authService;
@@ -32,7 +30,7 @@ public class LoginFrame extends JFrame {
         super("AURA — Institutional Sign In | TKMCE");
         this.authService = authService;
 
-        setSize(500, 680);
+        setSize(500, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
@@ -50,7 +48,7 @@ public class LoginFrame extends JFrame {
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(UITheme.BG_CARD);
         card.setBorder(UITheme.createCardBorder());
-        card.setPreferredSize(new Dimension(420, 610));
+        card.setPreferredSize(new Dimension(420, 530));
 
         // Logo & Heading
         JLabel logo = new JLabel("⚡ AURA", SwingConstants.CENTER);
@@ -75,34 +73,14 @@ public class LoginFrame extends JFrame {
         card.add(collegeBadge);
         card.add(Box.createVerticalStrut(18));
 
-        // --- Primary Google Workspace Sign-In Button ---
-        ModernButton googleBtn = new ModernButton("G   Continue with TKMCE Google", ModernButton.Style.PRIMARY);
-        googleBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        googleBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
-        googleBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        googleBtn.addActionListener(e -> handleGoogleLogin());
-        card.add(googleBtn);
-        card.add(Box.createVerticalStrut(14));
-
-        // --- Divider ---
-        JPanel dividerPanel = new JPanel(new GridBagLayout());
-        dividerPanel.setOpaque(false);
-        dividerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
-        JLabel dividerLabel = new JLabel("— OR SIGN IN WITH CREDENTIALS —");
-        dividerLabel.setFont(new Font("Segoe UI", Font.BOLD, 10));
-        dividerLabel.setForeground(UITheme.TEXT_SUBTLE);
-        dividerPanel.add(dividerLabel);
-        card.add(dividerPanel);
-        card.add(Box.createVerticalStrut(12));
-
         // Inputs
-        card.add(createInputSection("Institutional Email (@tkmce.ac.in):", emailField));
+        card.add(createInputSection("Email", emailField));
         card.add(Box.createVerticalStrut(10));
-        card.add(createInputSection("Password:", passwordField));
+        card.add(createInputSection("Password", passwordField));
         card.add(Box.createVerticalStrut(16));
 
         // Sign In Button
-        ModernButton loginBtn = new ModernButton("Sign In with Password", ModernButton.Style.GHOST);
+        ModernButton loginBtn = new ModernButton("Sign In", ModernButton.Style.PRIMARY);
         loginBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
         loginBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         loginBtn.addActionListener(e -> handleLogin());
@@ -179,97 +157,6 @@ public class LoginFrame extends JFrame {
         p.add(lbl, BorderLayout.NORTH);
         p.add(field, BorderLayout.CENTER);
         return p;
-    }
-
-    private void handleGoogleLogin() {
-        if (!OAuthConfig.isConfigured() && OAuthConfig.isDevMode()) {
-            // Dev Mock simulation dialog allowing instant viva testing of auto-provisioning
-            JPanel panel = new JPanel(new GridLayout(0, 1, 4, 4));
-            panel.add(new JLabel("<html><b>Google Cloud Credentials Not Configured</b><br>"
-                    + "Running in <i>Dev Mock Mode</i> to test Supabase auto-provisioning:</html>"));
-            JTextField mockEmailField = new JTextField("newstudent@tkmce.ac.in");
-            JTextField mockNameField = new JTextField("Athil Rahuman A");
-            panel.add(new JLabel("Institutional Email (@tkmce.ac.in):"));
-            panel.add(mockEmailField);
-            panel.add(new JLabel("Student Full Name:"));
-            panel.add(mockNameField);
-
-            int res = JOptionPane.showConfirmDialog(this, panel, "TKMCE Google Workspace Sign-In (Dev Mock)",
-                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-            if (res == JOptionPane.OK_OPTION) {
-                String email = mockEmailField.getText().trim();
-                String name = mockNameField.getText().trim();
-                try {
-                    User user = authService.loginWithGoogle(new GoogleOAuthService.GoogleUserInfo(email, name, null));
-                    routeToDashboard(user);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, ex.getMessage(), "Validation Notice", JOptionPane.WARNING_MESSAGE);
-                }
-            }
-            return;
-        }
-
-        // Live RFC 8252 Loopback OAuth Flow
-        JDialog progressDialog = new JDialog(this, "Google Sign-In | AURA", true);
-        progressDialog.setSize(380, 180);
-        progressDialog.setLocationRelativeTo(this);
-        progressDialog.getContentPane().setBackground(UITheme.BG_CARD);
-
-        JPanel pContent = new JPanel();
-        pContent.setLayout(new BoxLayout(pContent, BoxLayout.Y_AXIS));
-        pContent.setBorder(new EmptyBorder(20, 24, 20, 24));
-        pContent.setBackground(UITheme.BG_CARD);
-
-        JLabel lblStatus = new JLabel("Opening browser for Google Sign-In...", SwingConstants.CENTER);
-        lblStatus.setFont(UITheme.FONT_BODY_BOLD);
-        lblStatus.setForeground(UITheme.TEXT_MAIN);
-        lblStatus.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel lblHint = new JLabel("Please complete authentication in your browser.", SwingConstants.CENTER);
-        lblHint.setFont(UITheme.FONT_SMALL);
-        lblHint.setForeground(UITheme.TEXT_MUTED);
-        lblHint.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        ModernButton cancelBtn = new ModernButton("Cancel", ModernButton.Style.DANGER);
-        cancelBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        cancelBtn.addActionListener(ev -> {
-            authService.getGoogleOAuthService().cancelOAuthFlow();
-            progressDialog.dispose();
-        });
-
-        pContent.add(lblStatus);
-        pContent.add(Box.createVerticalStrut(8));
-        pContent.add(lblHint);
-        pContent.add(Box.createVerticalStrut(20));
-        pContent.add(cancelBtn);
-        progressDialog.setContentPane(pContent);
-
-        SwingWorker<User, Void> worker = new SwingWorker<>() {
-            @Override
-            protected User doInBackground() throws Exception {
-                GoogleOAuthService.GoogleUserInfo info = authService.getGoogleOAuthService().executeOAuthFlow();
-                return authService.loginWithGoogle(info);
-            }
-
-            @Override
-            protected void done() {
-                progressDialog.dispose();
-                try {
-                    User user = get();
-                    routeToDashboard(user);
-                } catch (Exception ex) {
-                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                    if (!(cause instanceof java.util.concurrent.CancellationException)) {
-                        JOptionPane.showMessageDialog(LoginFrame.this,
-                                "Google Sign-In failed: " + cause.getMessage(),
-                                "Authentication Notice", JOptionPane.WARNING_MESSAGE);
-                    }
-                }
-            }
-        };
-
-        worker.execute();
-        progressDialog.setVisible(true);
     }
 
     private void handleLogin() {

@@ -3,6 +3,17 @@
   "name": "aura-campus",
   "routes": [
     {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/final-presentation/?",
+      "dest": "/docs/presentation/final/index.html"
+    },
+    {
+      "src": "/final-presentation\\.pdf",
+      "dest": "/docs/presentation/AURA_Final_Evaluation.pdf"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }

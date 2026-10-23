@@ -19,10 +19,18 @@ import java.util.List;
 public class StudentReceiptDAO {
 
     public void createReceipt(int studentId, int submissionId) {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            createReceipt(conn, studentId, submissionId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error storing anonymity receipt: " + e.getMessage(), e);
+        }
+    }
+
+    /** Inserts on the caller's connection so it can join a wider transaction. */
+    public void createReceipt(Connection conn, int studentId, int submissionId) {
         String sql = "INSERT INTO student_submission_receipts (student_id, submission_id) VALUES (?, ?) " +
                      "ON CONFLICT (student_id, submission_id) DO NOTHING";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, studentId);
             ps.setInt(2, submissionId);
             ps.executeUpdate();

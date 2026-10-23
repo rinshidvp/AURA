@@ -1,0 +1,19 @@
+# Deploy only the web portal and the final presentation. Everything else (Java sources,
+# local credentials such as src/main/resources/db.properties, SQL, other docs, tests)
+# stays out of Vercel, because any uploaded file would be publicly served.
+/*
+!/index.html
+!/sw.js
+!/manifest.json
+!/vercel.json
+!/api
+
+# Final evaluation deck, served at /final-presentation (see vercel.json).
+!/docs
+/docs/*
+!/docs/presentation
+/docs/presentation/*
+!/docs/presentation/AURA_Final_Evaluation.pdf
+!/docs/presentation/final
+/docs/presentation/final/*
+!/docs/presentation/final/index.html

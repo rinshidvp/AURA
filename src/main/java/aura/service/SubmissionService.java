@@ -1,5 +1,6 @@
 package aura.service;
 
+import aura.config.DatabaseConfig;
 import aura.dao.StudentReceiptDAO;
 import aura.dao.SubmissionDAO;
 import aura.dao.SubmissionHistoryDAO;
@@ -7,6 +8,8 @@ import aura.model.Submission;
 import aura.model.SubmissionHistory;
 import aura.util.ValidationUtil;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -40,18 +43,30 @@ public class SubmissionService {
         }
         ValidationUtil.validateSubmission(submission.getTitle(), submission.getDescription(), submission.getLocation());
 
-        // 1. Store anonymous submission
-        Submission saved = submissionDAO.create(submission);
+        // All three writes commit together, so a report can never exist without its owner's receipt.
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // 1. Store anonymous submission
+                Submission saved = submissionDAO.create(conn, submission);
 
-        // 2. Store private student receipt in the Anonymity Vault
-        studentReceiptDAO.createReceipt(studentId, saved.getSubmissionId());
+                // 2. Store private student receipt in the Anonymity Vault
+                studentReceiptDAO.createReceipt(conn, studentId, saved.getSubmissionId());
 
-        // 3. Record initial audit history
-        SubmissionHistory initialHistory = new SubmissionHistory(
-                0, saved.getSubmissionId(), null, saved.getStatus(), studentId, "Student");
-        submissionHistoryDAO.create(initialHistory);
+                // 3. Record initial audit history
+                SubmissionHistory initialHistory = new SubmissionHistory(
+                        0, saved.getSubmissionId(), null, saved.getStatus(), studentId, "Student");
+                submissionHistoryDAO.create(conn, initialHistory);
 
-        return saved;
+                conn.commit();
+                return saved;
+            } catch (RuntimeException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error creating submission: " + e.getMessage(), e);
+        }
     }
 
     public Optional<Submission> getSubmissionById(int submissionId) {

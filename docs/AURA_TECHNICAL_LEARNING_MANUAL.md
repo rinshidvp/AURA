@@ -8,6 +8,8 @@
 **Purpose:** Learning and technical understanding, not a presentation script  
 **Source of truth:** The Java source, SQL scripts, tests, repository documentation, and the first presentation ownership matrix
 
+> Authentication note: sections describing the former Google OAuth desktop flow are historical. The active Java and web login paths use institutional email/password authentication.
+
 ---
 
 ## How To Use This Manual

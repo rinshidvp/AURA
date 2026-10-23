@@ -8,6 +8,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  test-web-portal:
+    name: Web Portal Browser Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Web Test Dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Portal Browser Tests
+        run: npm run test:web
+
   # ===========================================================================
   # 1. JAVA ENTERPRISE BACKEND & DESKTOP CI
   # Compiles Java 17 source, executes automated tests, packages executable fat JAR,
@@ -71,7 +94,7 @@ jobs:
     name: Deploy Web Portal to Vercel
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    needs: [ build-and-test-java ]
+    needs: [ build-and-test-java, test-web-portal ]
 
     steps:
       - name: Checkout Source Code
