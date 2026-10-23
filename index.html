@@ -706,6 +706,38 @@
     /* Keep messages clear of a dialog's action buttons. */
     body:has(.modal-backdrop.open) .toast { top: 16px; bottom: auto; }
     @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 10px); } }
+
+    /* ==========================================================================
+       MOBILE POLISH — safe areas, dynamic viewport heights, compact header
+       ========================================================================== */
+    @media (max-width: 1023px) {
+      .app-layout { min-height: calc(100vh - 64px); min-height: calc(100svh - 64px); }
+      .app-topbar {
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+      }
+      .app-main {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+        padding-bottom: calc(104px + env(safe-area-inset-bottom));
+      }
+      .mobile-bottom-nav {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+      }
+      .modal-content { max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); }
+    }
+    @media (max-width: 640px) {
+      .site-footer { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+      .modal-content { max-height: 92vh; max-height: 92dvh; }
+      .modal-footer { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+    }
+    @media (max-width: 360px) {
+      .brand-sub { display: none; }
+    }
+    @supports (height: 100svh) {
+      .boot-view, .signin-view { min-height: 100svh; }
+    }
   </style>
 </head>
 <body>
