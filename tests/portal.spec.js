@@ -115,6 +115,7 @@ test.describe('live portal (Supabase session)', () => {
     await expect(page.locator('#role-text')).toHaveText('Student');
     await expect(page.locator('#account-name')).toHaveText('Test Student');
     await expect(page.locator('#dtab-admin')).toBeHidden();
+    await expect(page.locator('#admin-overview')).toBeHidden();
     await expect(page.locator('#btn-export-csv')).toBeHidden();
 
     // Direct calls and URLs cannot open the admin console for a student.
@@ -205,6 +206,14 @@ test.describe('live portal (Supabase session)', () => {
     await expect(page.locator('#btn-export-csv')).toBeVisible();
     await expect(page.locator('#stat-pending')).toHaveText('1');
 
+    // Status donut reflects the same live data as the KPI tiles.
+    await expect(page.locator('#admin-overview')).toBeVisible();
+    await expect(page.locator('#chart-total')).toHaveText('2');
+    await expect(page.locator('#chart-count-pending')).toHaveText('1');
+    await expect(page.locator('#chart-count-active')).toHaveText('1');
+    await expect(page.locator('#chart-count-resolved')).toHaveText('0');
+    await expect(page.locator('#chart-count-rejected')).toHaveText('0');
+
     // Pending reports come first.
     const first = page.locator('.issue-card').first();
     await expect(first.getByRole('heading')).toHaveText('Extend library hours');
@@ -230,6 +239,9 @@ test.describe('live portal (Supabase session)', () => {
     await expect(resolved.locator('.status-pill')).toHaveText('Resolved');
     await expect(resolved.locator('.resolution-text')).toHaveText('Reading room now open until 10 PM during exams.');
     await expect(page.locator('#stat-resolved')).toHaveText('1');
+    await expect(page.locator('#chart-count-pending')).toHaveText('0');
+    await expect(page.locator('#chart-count-resolved')).toHaveText('1');
+    await expect(page.locator('#chart-total')).toHaveText('2');
 
     const downloadPromise = page.waitForEvent('download');
     await page.locator('#btn-export-csv').click();
@@ -241,6 +253,25 @@ test.describe('live portal (Supabase session)', () => {
     await page.evaluate(() => openReportModal());
     await expect(page.locator('#toast-message')).toContainText('Only signed-in students');
     await expect(page.locator('#report-modal')).not.toHaveClass(/open/);
+  });
+
+  test('admin status donut stays readable on a narrow phone screen', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await signIn(page, 'ADMIN');
+    await expect(page).toHaveURL(/#\/app\/admin$/);
+
+    const overview = page.locator('#admin-overview');
+    await expect(overview).toBeVisible();
+    await expect(page.locator('#chart-total')).toHaveText('2');
+    await expect(page.locator('#chart-count-pending')).toBeVisible();
+    await expect(page.locator('#chart-count-active')).toBeVisible();
+    await expect(page.locator('#chart-count-resolved')).toBeVisible();
+    await expect(page.locator('#chart-count-rejected')).toBeVisible();
+
+    const donut = await page.locator('.admin-donut').boundingBox();
+    const body = await page.locator('.admin-chart-body').boundingBox();
+    expect(body.y).toBeGreaterThanOrEqual(donut.y + donut.height - 1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
   });
 
   test('unapproved institutional account is rejected without opening the portal', async ({ page }) => {
